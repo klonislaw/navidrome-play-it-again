@@ -1,0 +1,131 @@
+{
+  "name": "Play Again",
+  "author": "Bob",
+  "version": "2.0.0",
+  "description": "Removes albums from your Play Later playlist once you've listened to enough tracks. Also maintains a Forgotten Records playlist of random complete albums you haven't played in a while.",
+  "permissions": {
+    "subsonicAPI": {
+      "reason": "Read and modify the Play Later and Forgotten Records playlists"
+    },
+    "users": {
+      "reason": "Receive scrobble events per user and iterate users for scheduled rebuilds"
+    },
+    "kvstore": {
+      "reason": "Track per-user played-track counts between sessions"
+    },
+    "cache": {
+      "reason": "Cache playlist IDs to avoid redundant API calls"
+    },
+    "scheduler": {
+      "reason": "Schedule periodic rebuild of the Forgotten Records playlist"
+    }
+  },
+  "config": {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "playlist_name": {
+          "type": "string",
+          "title": "Play Later Playlist Name",
+          "description": "Exact name of the Play Later playlist to watch (case-insensitive).",
+          "default": "Play Later"
+        },
+        "threshold": {
+          "type": "integer",
+          "title": "Album Removal Threshold (%)",
+          "description": "Percentage of distinct album tracks that must be scrobbled before the album is removed from the Play Later playlist (1–100).",
+          "default": 30,
+          "minimum": 1,
+          "maximum": 100
+        },
+        "fr_playlist_name": {
+          "type": "string",
+          "title": "Forgotten Records Playlist Name",
+          "description": "Name of the Forgotten Records playlist (case-insensitive). Created automatically if it doesn't exist.",
+          "default": "Forgotten records"
+        },
+        "fr_album_count": {
+          "type": "integer",
+          "title": "Albums per Rebuild",
+          "description": "Number of complete albums to include in the Forgotten Records playlist.",
+          "default": 8,
+          "minimum": 1
+        },
+        "fr_pool_multiplier": {
+          "type": "integer",
+          "title": "Pool Multiplier",
+          "description": "Size of the candidate pool as a multiple of Albums per Rebuild. E.g. 8 albums × 3 = 24 least-recently-played albums form the pool, 8 are randomly selected.",
+          "default": 3,
+          "minimum": 1
+        },
+        "fr_threshold": {
+          "type": "integer",
+          "title": "Forgotten Records Removal Threshold (%)",
+          "description": "Percentage of distinct album tracks that must be scrobbled before the album is removed from Forgotten Records (1–100).",
+          "default": 30,
+          "minimum": 1,
+          "maximum": 100
+        },
+        "fr_update_schedule": {
+          "type": "string",
+          "title": "Rebuild Schedule (Cron)",
+          "description": "Cron expression for how often the Forgotten Records playlist is rebuilt. Default: daily at midnight (0 0 * * *). Requires Navidrome restart to take effect.",
+          "default": "0 0 * * *"
+        },
+        "fr_refresh_now": {
+          "type": "boolean",
+          "title": "Refresh Forgotten Records Now",
+          "description": "Enable this and play any track to trigger an immediate rebuild of the Forgotten Records playlist. The rebuild runs shortly after your next scrobble. Disable afterwards to avoid repeated rebuilds.",
+          "default": false
+        },
+        "logging": {
+          "type": "boolean",
+          "title": "Enable Logging",
+          "description": "Write plugin activity to the KVStore log buffer. Read with the Python snippet in README.md.",
+          "default": false
+        }
+      }
+    },
+    "uiSchema": {
+      "type": "VerticalLayout",
+      "elements": [
+        {
+          "type": "Control",
+          "scope": "#/properties/playlist_name"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/threshold"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/fr_playlist_name"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/fr_album_count"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/fr_pool_multiplier"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/fr_threshold"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/fr_update_schedule"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/fr_refresh_now"
+        },
+        {
+          "type": "Control",
+          "scope": "#/properties/logging"
+        }
+      ]
+    }
+  }
+}
