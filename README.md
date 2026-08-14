@@ -41,7 +41,6 @@ All options are adjustable in Navidrome → Settings → Plugins after installat
 | Pool Multiplier                         | `3`                 | Pool size = Albums per Rebuild × multiplier; random selection picks from this pool                          |
 | Forgotten Records Removal Threshold (%) | `30`                | Percentage of tracks that must be scrobbled before removal from Forgotten Records                           |
 | Rebuild Schedule (Cron)                 | `0 0 * * *`         | Cron expression for rebuild (requires Navidrome restart to change)                                          |
-| Refresh Forgotten Records Now           | off                 | Enable and play any track to trigger an immediate rebuild                                                   |
 | Enable Logging                          | off                 | Write plugin activity to the KVStore log buffer                                                             |
 
 A threshold of 30% means: for a 10-track album, playing any 3 distinct tracks removes it. Setting it to 1 removes the album after the very first track; 100 requires every track.
@@ -127,10 +126,10 @@ Adjust the path to match what you found in Step 1. The buffer holds the last 50 
 ### Forgotten Records
 
 1. After enabling the plugin (steps 1–3 above), the Forgotten Records playlist is created automatically on the first scheduled rebuild.
-2. To trigger the first rebuild immediately, either restart Navidrome (the schedule is registered on plugin load) or enable **Refresh Forgotten Records Now** in the plugin settings and play any track.
+2. The first rebuild also runs immediately when the plugin is enabled (or Navidrome is restarted), so you don't have to wait for the cron schedule.
 3. Optionally adjust the Forgotten Records config options (playlist name, album count, pool multiplier, threshold, cron schedule) in Navidrome → Settings → Plugins.
 4. Changing the **Rebuild Schedule** requires a Navidrome restart (not hot-reload) to take effect.
-5. To manually refresh the playlist at any time, enable **Refresh Forgotten Records Now** and play any track. The rebuild runs shortly after your next scrobble. Disable the toggle afterwards to avoid repeated rebuilds.
+5. To manually refresh the playlist at any time, disable and re-enable the plugin in Navidrome → Settings → Plugins. This triggers an immediate rebuild.
 
 ## Repository files
 

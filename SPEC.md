@@ -73,7 +73,6 @@ Declared in the plugin manifest and editable in Navidrome's plugin UI:
 | `forgottenrecords_album_pool_size` | integer | `50`                | Directly sets the pool size for random selection. If smaller than `forgottenrecords_album_count`, the album count is used. If larger than the library size, the library size is used. |
 | `forgottenrecords_threshold`       | integer | `30`                | % of distinct tracks that must be scrobbled before removal from Forgotten Records                                                                                                     |
 | `forgottenrecords_schedule`        | string  | `0 0 * * *`         | Cron expression for rebuild schedule (requires Navidrome restart to change)                                                                                                           |
-| `forgottenrecords_refresh_now`     | boolean | `false`             | Enable and play any track to trigger an immediate rebuild (rate-limited to 5 min)                                                                                                     |
 
 ---
 
@@ -212,22 +211,23 @@ Because the endpoint uses **indexes** (not IDs) for removal, the plugin must:
 
 ## Edge cases and constraints
 
-| Scenario                                              | Behaviour                                                                                                                                             |
-| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Play Later playlist doesn't exist yet                 | Plugin does nothing; no error                                                                                                                         |
-| Forgotten Records playlist doesn't exist              | Created automatically on first scheduled rebuild                                                                                                      |
-| Album partially added (not all tracks in playlist)    | `totalInAlbum` comes from Navidrome's album record (full count), so threshold is based on the full album even if only some tracks are in the playlist |
-| User replays a track                                  | Distinct-track set prevents double-counting                                                                                                           |
-| Track removed from playlist manually before threshold | On next scrobble, the plugin re-checks; if no album tracks remain, it skips                                                                           |
-| Plugin assigned to multiple users                     | Each user's state is fully independent (key-namespaced by username)                                                                                   |
-| `threshold` = 1                                       | First scrobble from the album triggers removal (effectively "any single song")                                                                        |
-| `playlater_threshold` = 100                           | All tracks must be scrobbled                                                                                                                          |
-| Album not in Navidrome library (edge)                 | `getAlbum` fails → plugin logs a warning and skips                                                                                                    |
-| Library has fewer albums than pool size               | Pool shrinks to available albums; if fewer than `forgottenrecords_album_count`, all available albums are used                                         |
-| Schedule registration fails                           | Plugin loads normally; Play Later still works; error logged                                                                                           |
-| Config change to `forgottenrecords_schedule`          | Requires Navidrome restart (not hot-reload) — `OnInit` re-registers the schedule                                                                      |
-| `playlater_enabled` = false                           | Plugin skips all Play Later processing on scrobble; existing playlist is left as-is                                                                   |
-| `forgottenrecords_enabled` = false                    | `OnInit` cancels the recurring rebuild schedule; `OnCallback` ignores rebuild callbacks; scrobbles skip Forgotten Records removal and manual refresh  |
+| Scenario                                              | Behaviour                                                                                                                                                           |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Play Later playlist doesn't exist yet                 | Plugin does nothing; no error                                                                                                                                       |
+| Forgotten Records playlist doesn't exist              | Created automatically on first scheduled rebuild                                                                                                                    |
+| Album partially added (not all tracks in playlist)    | `totalInAlbum` comes from Navidrome's album record (full count), so threshold is based on the full album even if only some tracks are in the playlist               |
+| User replays a track                                  | Distinct-track set prevents double-counting                                                                                                                         |
+| Track removed from playlist manually before threshold | On next scrobble, the plugin re-checks; if no album tracks remain, it skips                                                                                         |
+| Plugin assigned to multiple users                     | Each user's state is fully independent (key-namespaced by username)                                                                                                 |
+| `threshold` = 1                                       | First scrobble from the album triggers removal (effectively "any single song")                                                                                      |
+| `playlater_threshold` = 100                           | All tracks must be scrobbled                                                                                                                                        |
+| Album not in Navidrome library (edge)                 | `getAlbum` fails → plugin logs a warning and skips                                                                                                                  |
+| Library has fewer albums than pool size               | Pool shrinks to available albums; if fewer than `forgottenrecords_album_count`, all available albums are used                                                       |
+| Schedule registration fails                           | Plugin loads normally; Play Later still works; error logged                                                                                                         |
+| Config change to `forgottenrecords_schedule`          | Requires Navidrome restart (not hot-reload) — `OnInit` re-registers the schedule                                                                                    |
+| `playlater_enabled` = false                           | Plugin skips all Play Later processing on scrobble; existing playlist is left as-is                                                                                 |
+| `forgottenrecords_enabled` = false                    | `OnInit` cancels the recurring rebuild schedule; `OnCallback` ignores rebuild callbacks; scrobbles skip Forgotten Records removal                                   |
+| Plugin enabled / re-enabled / Navidrome restarted     | `OnInit` re-registers the recurring schedule and schedules an immediate `rebuild-now` so the Forgotten Records playlist refreshes without waiting for the cron tick |
 
 ---
 

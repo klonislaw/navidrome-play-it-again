@@ -33,9 +33,7 @@ const (
 	defaultForgottenRecordsThreshold     = 30
 	defaultForgottenRecordsSchedule      = "0 0 * * *"
 	frScheduleID                         = "fr-rebuild"
-	frRefreshOnceID                      = "fr-refresh-once"
 	frRebuildOnLoadID                    = "fr-rebuild-on-load"
-	manualRefreshRateLimit               = 300 // seconds — rate limit for manual refresh trigger
 	albumListPageSize                    = 500
 	playlistBatchSize                    = 200
 )
@@ -100,20 +98,6 @@ func (p *plugin) Scrobble(req scrobbler.ScrobbleRequest) error {
 			clamp(configInt("forgottenrecords_threshold", defaultForgottenRecordsThreshold), 1, 100), "fr:")
 	}
 
-	// Manual Forgotten Records refresh: if enabled, schedule a one-time rebuild
-	// on the next scrobble. Rate-limited via KVStore timestamp.
-	if configBool("forgottenrecords_enabled", defaultForgottenRecordsEnabled) {
-		if v, ok := host.ConfigGet("forgottenrecords_refresh_now"); ok && v == "true" {
-			if shouldTriggerManualRefresh() {
-				if _, err := host.SchedulerScheduleOneTime(0, "rebuild-now", frRefreshOnceID); err != nil {
-					logf("fr: failed to schedule manual refresh: %v", err)
-				} else {
-					logf("fr: manual refresh scheduled")
-				}
-			}
-		}
-	}
-
 	return nil
 }
 
@@ -150,9 +134,7 @@ func (p *plugin) OnInit() error {
 	}
 
 	// Schedule an immediate rebuild so enabling/re-enabling/restarting the plugin
-	// refreshes the Forgotten Records playlist without waiting for the next cron
-	// tick. Uses a dedicated schedule ID to avoid colliding with the manual
-	// "Refresh now" one-time schedule (frRefreshOnceID) driven by scrobbles.
+	// refreshes the Forgotten Records playlist without waiting for the next cron tick.
 	if _, err := host.SchedulerScheduleOneTime(0, "rebuild-now", frRebuildOnLoadID); err != nil {
 		logf("fr: failed to schedule rebuild on load: %v", err)
 	} else {
@@ -751,23 +733,6 @@ func clamp(v, min, max int) int {
 		return max
 	}
 	return v
-}
-
-// shouldTriggerManualRefresh rate-limits manual refresh triggers using a KVStore
-// timestamp so repeated scrobbles (while the toggle is on) don't schedule
-// multiple one-time rebuilds.
-func shouldTriggerManualRefresh() bool {
-	data, exists, _ := host.KVStoreGet("fr:manual_refresh_time")
-	if exists {
-		var lastTime int64
-		json.Unmarshal(data, &lastTime)
-		if time.Now().Unix()-lastTime < int64(manualRefreshRateLimit) {
-			return false
-		}
-	}
-	ts, _ := json.Marshal(time.Now().Unix())
-	host.KVStoreSet("fr:manual_refresh_time", ts)
-	return true
 }
 
 // --- Logging ---

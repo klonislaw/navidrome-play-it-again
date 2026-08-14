@@ -84,12 +84,6 @@
           "description": "Cron expression for how often the Forgotten Records playlist is rebuilt. Default: daily at midnight (0 0 * * *). Requires Navidrome restart to take effect.",
           "default": "0 0 * * *"
         },
-        "forgottenrecords_refresh_now": {
-          "type": "boolean",
-          "title": "Refresh Forgotten records after every scrobble",
-          "description": "The play list is updated according to the cron schedule. If you want to update it now, toggle this option and play a track. Don't forget to turn it off after you're done. (This is because of Navidrome plugin limitations)",
-          "default": false
-        },
         "logging": {
           "type": "boolean",
           "title": "Enable logging",
@@ -172,12 +166,8 @@
               "scope": "#/properties/forgottenrecords_schedule"
             },
             {
-              "type": "Control",
-              "scope": "#/properties/forgottenrecords_refresh_now"
-            },
-            {
               "type": "Label",
-              "text": "The Forgotten records playlist is updated according to the cron schedule. If you want to update it now, toggle this option and play a track. Don't forget to turn it off after you're done. (This is because of Navidrome plugin limitations)"
+              "text": "If you want to update it now, toggle the plugin off and on again. The playlist refreshed every time the plugin is toggled on."
             }
           ]
         },
