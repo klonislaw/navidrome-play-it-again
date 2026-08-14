@@ -27,7 +27,7 @@
         "playlist_name": {
           "type": "string",
           "title": "Play Later Playlist Name",
-          "description": "Exact name of the Play Later playlist to watch (case-insensitive).",
+          "description": "Exact name of the existing 'Play Later' playlist to watch (case-insensitive).",
           "default": "Play Later"
         },
         "threshold": {
@@ -54,14 +54,14 @@
         "fr_pool_multiplier": {
           "type": "integer",
           "title": "Pool Multiplier",
-          "description": "Size of the candidate pool as a multiple of Albums per Rebuild. E.g. 8 albums × 3 = 24 least-recently-played albums form the pool, 8 are randomly selected.",
-          "default": 3,
+          "description": "Size of the candidate pool as a multiple of Albums per Rebuild. E.g. 8 albums × multiplier 10 = 80 least-recently-played albums form the pool, 8 are randomly selected.",
+          "default": 10,
           "minimum": 1
         },
         "fr_threshold": {
           "type": "integer",
-          "title": "Forgotten Records Removal Threshold (%)",
-          "description": "Percentage of distinct album tracks that must be scrobbled before the album is removed from Forgotten Records (1–100).",
+          "title": "Album Removal Threshold (%)",
+          "description": "Percentage of distinct album tracks that must be scrobbled before the album is removed from Forgotten Records playlist(1–100).",
           "default": 30,
           "minimum": 1,
           "maximum": 100
