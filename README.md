@@ -8,6 +8,7 @@ It revolves around 2 playlists.
 - **Forgotten Records** — A rotating collection of random complete albums you haven't played in a while. It is refreshed on a regular schedule and albums get removed as you play them.
 
 ## AI coding alert
+
 For full transparency: all the code, as well as the readme from the next section onward, was written using AI. Given that Navidrom plugins use Go (which I never used before) and plugins are explicitly limited in what they are allowed to do, this was a suitable solution for me.
 
 ## How it works
