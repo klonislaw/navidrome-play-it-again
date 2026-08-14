@@ -41,77 +41,32 @@ All options are adjustable in Navidrome → Settings → Plugins after installat
 | Pool Multiplier                         | `3`                 | Pool size = Albums per Rebuild × multiplier; random selection picks from this pool                          |
 | Forgotten Records Removal Threshold (%) | `30`                | Percentage of tracks that must be scrobbled before removal from Forgotten Records                           |
 | Rebuild Schedule (Cron)                 | `0 0 * * *`         | Cron expression for rebuild (requires Navidrome restart to change)                                          |
-| Enable Logging                          | off                 | Write plugin activity to the KVStore log buffer                                                             |
 
 A threshold of 30% means: for a 10-track album, playing any 3 distinct tracks removes it. Setting it to 1 removes the album after the very first track; 100 requires every track.
 
 ## Logging
 
-Enable logging in Navidrome → Settings → Plugins → Play it again → **Enable Logging**. No restart is required; the toggle takes effect on the next scrobble.
+The plugin logs through Navidrome's native plugin logging (the Extism `pdk.Log` host function), so output goes to the standard Navidrome log stream — the same place as the rest of Navidrome's logs (e.g. `docker logs`). There is no per-plugin logging toggle.
 
-Because WASM plugins run in a sandboxed environment without filesystem access, the plugin cannot write its own log file. Instead, log lines are written to the plugin's own KVStore — a small SQLite database Navidrome keeps in its data folder.
+Verbosity is controlled by the server's `[Plugins] LogLevel` setting (for example `LogLevel = "debug"` in `navidrome.toml` under `[Plugins]` to see everything). Lower the level (`info`/`warn`) to reduce output.
 
-Logging is intentionally quiet. Nothing is written for tracks whose album is not in either playlist, so the output stays manageable even with heavy listening. What does get logged:
+What the plugin logs:
 
 - **Progress** — each time a track from a watched album is scrobbled, showing how many distinct tracks have been played versus how many are needed.
 - **Removal** — when the threshold is reached and an album is removed.
 - **Rebuild** — when the Forgotten Records playlist is rebuilt, showing how many albums and tracks were added.
 - **Errors** — any API or storage failure.
 
-Example entries:
+Example entries (the host adds the timestamp and plugin context):
 
 ```
-2026-05-17 21:04:11 scrobble received: user=bob track="So What" album="Kind of Blue"
-2026-05-17 21:04:11 user=bob album="Kind of Blue": 2/6 tracks played, need 2 to remove (Play Later)
-2026-05-17 21:04:11 user=bob album="Kind of Blue": threshold reached, removing 6 tracks from "Play Later"
-2026-05-17 21:04:11 user=bob album="Kind of Blue": successfully removed from "Play Later"
-2026-05-18 00:00:00 fr: rebuild callback received
-2026-05-18 00:00:01 fr: rebuilt playlist "Forgotten records" for user bob with 8 albums (87 tracks)
+scrobble received: user=bob track="So What" album="Kind of Blue"
+user=bob album="Kind of Blue": 2/6 tracks played, need 2 to remove (Play Later)
+user=bob album="Kind of Blue": threshold reached, removing 6 tracks from "Play Later"
+user=bob album="Kind of Blue": successfully removed from "Play Later"
+fr: rebuild callback received
+fr: rebuilt playlist "Forgotten records" for user bob with 8 albums (87 tracks)
 ```
-
-### Reading the log entries
-
-**Step 1 — find the KVStore file on the host**
-
-```bash
-sudo docker inspect navidrome-navidrome-1 \
-  --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{"\n"}}{{end}}'
-```
-
-Look for the mount whose destination is `/data` (Navidrome's data folder). The KVStore is then at:
-
-```
-<host data path>/plugins/play-it-again/kvstore.db
-```
-
-For example, on a Synology NAS this is often something like:
-
-```
-/volume1/docker/navidrome/plugins/play-it-again/kvstore.db
-```
-
-**Step 2 — read the log buffer**
-
-Python 3 ships with Synology DSM and includes the `sqlite3` module, so no extra packages are needed:
-
-```bash
-python3 << 'EOF'
-import sqlite3, json
-
-db = sqlite3.connect('/volume1/docker/navidrome/plugins/play-it-again/kvstore.db')
-row = db.execute("SELECT value FROM kvstore WHERE key='log:buffer'").fetchone()
-if row:
-    val = row[0]
-    if isinstance(val, bytes):
-        val = val.decode()
-    for line in json.loads(val):
-        print(line)
-else:
-    print("No log entries yet — play a track with logging enabled first.")
-EOF
-```
-
-Adjust the path to match what you found in Step 1. The buffer holds the last 50 entries and is never cleared automatically; older entries are dropped as new ones are added.
 
 ## Installation
 

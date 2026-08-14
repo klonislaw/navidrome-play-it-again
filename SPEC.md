@@ -171,7 +171,6 @@ The cache key includes the playlist name (`playlist:{username}:{playlistName}`) 
 | `played:{username}:{albumId}`        | JSON array of scrobbled track IDs (Play Later)        | None (cleared on removal) |
 | `fr:played:{username}:{albumId}`     | JSON array of scrobbled track IDs (Forgotten Records) | None (cleared on removal) |
 | `state:last_username`                | Username saved by IsAuthorized                        | None                      |
-| `log:buffer`                         | Rolling log buffer (last 50 lines)                    | None                      |
 
 ### Playlist modification
 

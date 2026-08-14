@@ -84,12 +84,6 @@
           "title": "Rebuild schedule (Cron)",
           "description": "Cron expression for how often the Forgotten Records playlist is rebuilt. Default: daily at midnight (0 0 * * *). Requires Navidrome restart to take effect.",
           "default": "0 0 * * *"
-        },
-        "logging": {
-          "type": "boolean",
-          "title": "Enable logging",
-          "description": "Write plugin activity to the KVStore log buffer. Read with the Python snippet in README.md.",
-          "default": false
         }
       }
     },
@@ -171,10 +165,6 @@
               "text": "If you want to update it now, toggle the plugin off and on again. The playlist refreshed every time the plugin is toggled on."
             }
           ]
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/logging"
         }
       ]
     }

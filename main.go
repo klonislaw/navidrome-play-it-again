@@ -13,6 +13,7 @@ import (
 
 	"github.com/navidrome/navidrome/plugins/pdk/go/host"
 	"github.com/navidrome/navidrome/plugins/pdk/go/lifecycle"
+	"github.com/navidrome/navidrome/plugins/pdk/go/pdk"
 	"github.com/navidrome/navidrome/plugins/pdk/go/scheduler"
 	"github.com/navidrome/navidrome/plugins/pdk/go/scrobbler"
 )
@@ -737,38 +738,12 @@ func clamp(v, min, max int) int {
 
 // --- Logging ---
 
-// Neither os.Stderr nor pdk.Log reach docker logs from inside Navidrome's WASM
-// sandbox. Instead, log lines are written to the plugin's KVStore as a rolling
-// buffer (last 50 lines). Read them with the Python snippet in README.md.
-
-const (
-	logKey      = "log:buffer"
-	logMaxLines = 50
-)
-
-// logf appends a timestamped line to the KVStore log buffer when logging is
-// enabled in the plugin config.
+// logf writes a line to Navidrome's native plugin log via the Extism PDK Log
+// host function. Verbosity is controlled by the server's [Plugins] LogLevel
+// setting (e.g. "debug" to see everything, "info"/"warn" for less), not by a
+// per-plugin config toggle. The host adds the timestamp and plugin context.
 func logf(format string, args ...interface{}) {
-	v, ok := host.ConfigGet("logging")
-	if !ok || v != "true" {
-		return
-	}
-
-	line := time.Now().UTC().Format("2006-01-02 15:04:05") + " " + fmt.Sprintf(format, args...)
-
-	data, _, _ := host.KVStoreGet(logKey)
-	var lines []string
-	if len(data) > 0 {
-		json.Unmarshal(data, &lines)
-	}
-
-	lines = append(lines, line)
-	if len(lines) > logMaxLines {
-		lines = lines[len(lines)-logMaxLines:]
-	}
-
-	data, _ = json.Marshal(lines)
-	host.KVStoreSet(logKey, data)
+	pdk.Log(pdk.LogInfo, fmt.Sprintf(format, args...))
 }
 
 func init() {
