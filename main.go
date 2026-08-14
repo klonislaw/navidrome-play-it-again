@@ -34,6 +34,7 @@ const (
 	defaultForgottenRecordsSchedule      = "0 0 * * *"
 	frScheduleID                         = "fr-rebuild"
 	frRefreshOnceID                      = "fr-refresh-once"
+	frRebuildOnLoadID                    = "fr-rebuild-on-load"
 	manualRefreshRateLimit               = 300 // seconds — rate limit for manual refresh trigger
 	albumListPageSize                    = 500
 	playlistBatchSize                    = 200
@@ -116,8 +117,15 @@ func (p *plugin) Scrobble(req scrobbler.ScrobbleRequest) error {
 	return nil
 }
 
-// OnInit is called once when the plugin is loaded (not on hot-reload).
+// OnInit is called once when the plugin is loaded (not on config hot-reload).
 // It registers the recurring schedule for the Forgotten Records rebuild.
+//
+// Enabling (or re-enabling) the plugin loads it and fires OnInit; a plain
+// Navidrome restart also fires OnInit. While the plugin is disabled nothing
+// executes and there is no unload hook, so a disable→enable transition cannot
+// be recorded — therefore we rebuild the Forgotten Records playlist on every
+// load where the feature is enabled. This also builds the playlist immediately
+// on first install. Rebuilds are cheap and already run daily via cron.
 func (p *plugin) OnInit() error {
 	// If Forgotten Records is disabled, cancel any lingering schedule and exit.
 	if !configBool("forgottenrecords_enabled", defaultForgottenRecordsEnabled) {
@@ -135,12 +143,21 @@ func (p *plugin) OnInit() error {
 	if err := host.SchedulerCancelSchedule(frScheduleID); err != nil {
 		logf("fr: cancel existing schedule (non-fatal): %v", err)
 	}
-
 	if _, err := host.SchedulerScheduleRecurring(cron, "rebuild", frScheduleID); err != nil {
 		logf("fr: failed to schedule recurring rebuild: %v", err)
-		return nil // don't fail the plugin load — Play Later still works
+	} else {
+		logf("fr: scheduled recurring rebuild with cron %q", cron)
 	}
-	logf("fr: scheduled recurring rebuild with cron %q", cron)
+
+	// Schedule an immediate rebuild so enabling/re-enabling/restarting the plugin
+	// refreshes the Forgotten Records playlist without waiting for the next cron
+	// tick. Uses a dedicated schedule ID to avoid colliding with the manual
+	// "Refresh now" one-time schedule (frRefreshOnceID) driven by scrobbles.
+	if _, err := host.SchedulerScheduleOneTime(0, "rebuild-now", frRebuildOnLoadID); err != nil {
+		logf("fr: failed to schedule rebuild on load: %v", err)
+	} else {
+		logf("fr: scheduled immediate rebuild on load")
+	}
 	return nil
 }
 
