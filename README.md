@@ -1,4 +1,4 @@
-# Navidrome Play Again
+# Navidrome Play it again
 
 A [Navidrome](https://www.navidrome.org) plugin that manages two playlists for you:
 
@@ -46,7 +46,7 @@ A threshold of 30% means: for a 10-track album, playing any 3 distinct tracks re
 
 ## Logging
 
-Enable logging in Navidrome → Settings → Plugins → Play Again → **Enable Logging**. No restart is required; the toggle takes effect on the next scrobble.
+Enable logging in Navidrome → Settings → Plugins → Play it again → **Enable Logging**. No restart is required; the toggle takes effect on the next scrobble.
 
 Because WASM plugins run in a sandboxed environment without filesystem access, the plugin cannot write its own log file. Instead, log lines are written to the plugin's own KVStore — a small SQLite database Navidrome keeps in its data folder.
 
@@ -80,13 +80,13 @@ sudo docker inspect navidrome-navidrome-1 \
 Look for the mount whose destination is `/data` (Navidrome's data folder). The KVStore is then at:
 
 ```
-<host data path>/plugins/play-again/kvstore.db
+<host data path>/plugins/play-it-again/kvstore.db
 ```
 
 For example, on a Synology NAS this is often something like:
 
 ```
-/volume1/docker/navidrome/plugins/play-again/kvstore.db
+/volume1/docker/navidrome/plugins/play-it-again/kvstore.db
 ```
 
 **Step 2 — read the log buffer**
@@ -97,7 +97,7 @@ Python 3 ships with Synology DSM and includes the `sqlite3` module, so no extra 
 python3 << 'EOF'
 import sqlite3, json
 
-db = sqlite3.connect('/volume1/docker/navidrome/plugins/play-again/kvstore.db')
+db = sqlite3.connect('/volume1/docker/navidrome/plugins/play-it-again/kvstore.db')
 row = db.execute("SELECT value FROM kvstore WHERE key='log:buffer'").fetchone()
 if row:
     val = row[0]
@@ -116,8 +116,8 @@ Adjust the path to match what you found in Step 1. The buffer holds the last 50 
 
 ### Play Later
 
-1. Copy `play-again.ndp` to your Navidrome plugins folder (e.g. `/data/plugins/`).
-2. In Navidrome → Settings → Plugins, enable the **Play Again** plugin.
+1. Copy `play-it-again.ndp` to your Navidrome plugins folder (e.g. `/data/plugins/`).
+2. In Navidrome → Settings → Plugins, enable the **Play it again** plugin.
 3. Assign your user account to the plugin (required so Navidrome routes your scrobble events to it).
 4. In your client, create a playlist whose name matches the configured **Play Later Playlist Name**.
 5. Add albums to the playlist as you normally would.
@@ -139,7 +139,7 @@ Adjust the path to match what you found in Step 1. The buffer holds the last 50 
 | `go.mod` / `go.sum` | Go module files, pinning the Navidrome plugin PDK and its dependencies |
 | `Makefile`          | Build and packaging rules                                              |
 | `plugin.wasm`       | Compiled WebAssembly binary (build artefact, not checked in)           |
-| `play-again.ndp`    | Packaged plugin ready for deployment (build artefact, not checked in)  |
+| `play-it-again.ndp` | Packaged plugin ready for deployment (build artefact, not checked in)  |
 | `SPEC.md`           | Design specification written before implementation                     |
 
 ## Building
@@ -168,11 +168,11 @@ Then build:
 # First time only — fetch dependencies
 go mod tidy
 
-# Build plugin.wasm and package play-again.ndp
+# Build plugin.wasm and package play-it-again.ndp
 make
 ```
 
-The Makefile compiles `main.go` using TinyGo (`-target wasip1 -buildmode=c-shared`) and then zips `manifest.json` and `plugin.wasm` into `play-again.ndp`. The resulting `.ndp` is around 440 KB compressed.
+The Makefile compiles `main.go` using TinyGo (`-target wasip1 -buildmode=c-shared`) and then zips `manifest.json` and `plugin.wasm` into `play-it-again.ndp`. The resulting `.ndp` is around 440 KB compressed.
 
 To clean build artefacts:
 

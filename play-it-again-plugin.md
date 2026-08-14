@@ -1,4 +1,4 @@
-# Play Again — Navidrome Plugin
+# Play it again — Navidrome Plugin
 
 A scrobbler plugin that removes albums from a watchlist playlist as you listen to them.
 
@@ -6,7 +6,7 @@ A scrobbler plugin that removes albums from a watchlist playlist as you listen t
 
 ## How it works
 
-1. You add full albums to a playlist called **Play Again** (or whatever name you configure).
+1. You add full albums to a playlist called **Play Later** (or whatever name you configure).
 2. When you play tracks from an album on that list, the plugin counts each completed play (a scrobble event).
 3. Once the percentage of played tracks crosses the configured threshold, **all tracks from that album are removed from the playlist**.
 
@@ -17,7 +17,7 @@ The threshold is configurable in the Navidrome UI. Set it to `0` to remove after
 ## Project structure
 
 ```
-play-again/
+play-it-again/
 ├── main.go        ← Plugin logic
 ├── manifest.json  ← Plugin metadata and permissions
 ├── go.mod         ← Go module file
@@ -30,7 +30,7 @@ play-again/
 
 ```json
 {
-  "name": "Play Again",
+  "name": "Play it again",
   "author": "you",
   "version": "1.0.0",
   "description": "Removes albums from a watchlist playlist as you listen to them.",
@@ -73,7 +73,7 @@ import (
 const (
 	cfgPlaylistName     = "playlist_name"
 	cfgThresholdPercent = "threshold_percent"
-	defaultPlaylist     = "Play Again"
+	defaultPlaylist     = "Play Later"
 )
 
 // ── Subsonic API response types ─────────────────────────────────────────────
@@ -297,7 +297,7 @@ func cfgInt(key, def int) int {
 // ── Misc ─────────────────────────────────────────────────────────────────────
 
 func logf(level pdk.LogLevel, format string, args ...any) {
-	pdk.Log(level, fmt.Sprintf("play-again: "+format, args...))
+	pdk.Log(level, fmt.Sprintf("play-it-again: "+format, args...))
 }
 
 func contains(ss []string, s string) bool {
@@ -321,7 +321,7 @@ func main() {}
 ## `go.mod`
 
 ```
-module play-again
+module play-it-again
 
 go 1.21
 
@@ -339,7 +339,7 @@ replace github.com/navidrome/navidrome/plugins/pdk/go => ../navidrome/plugins/pd
 ## `Makefile`
 
 ```makefile
-PLUGIN = play-again.ndp
+PLUGIN = play-it-again.ndp
 
 .PHONY: build clean
 
@@ -368,21 +368,21 @@ clean:
 ```
 your-projects/
 ├── navidrome/          ← git clone https://github.com/navidrome/navidrome
-└── play-again/         ← this plugin
+└── play-it-again/         ← this plugin
 ```
 
 ### 2. Fetch dependencies and build
 
 ```bash
-cd play-again
+cd play-it-again
 go mod tidy
 make build
-# Produces: play-again.ndp
+# Produces: play-it-again.ndp
 ```
 
 ### 3. Install
 
-Copy `play-again.ndp` to your Navidrome plugins folder (default: `<navidrome-data-dir>/plugins/`).
+Copy `play-it-again.ndp` to your Navidrome plugins folder (default: `<navidrome-data-dir>/plugins/`).
 
 Enable plugins in `navidrome.toml`:
 
@@ -394,18 +394,18 @@ Enabled = true
 ### 4. Configure in Navidrome
 
 1. Open Navidrome → avatar menu → **Plugins**
-2. Find **Play Again** and enable it
+2. Find **Play it again** and enable it
 3. Under **Users**, assign the plugin to your user account (required for scrobbler plugins)
 4. Click the plugin to open its settings and set:
 
 | Key                 | Default      | Meaning                                                                                          |
 | ------------------- | ------------ | ------------------------------------------------------------------------------------------------ |
-| `playlist_name`     | `Play Again` | Name of the watchlist playlist                                                                   |
+| `playlist_name`     | `Play Later` | Name of the watchlist playlist                                                                   |
 | `threshold_percent` | `0`          | % of tracks that must be played before the album is removed. `0` = remove after the first track. |
 
 ### 5. Create the playlist
 
-In Navidrome (or any Subsonic client), create a playlist with the exact name you configured — `Play Again` by default. Add full albums to it. The plugin watches for that exact name.
+In Navidrome (or any Subsonic client), create a playlist with the exact name you configured — `Play Later` by default. Add full albums to it. The plugin watches for that exact name.
 
 ---
 

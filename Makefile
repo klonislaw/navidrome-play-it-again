@@ -1,4 +1,4 @@
-PLUGIN_NAME := play-again
+PLUGIN_NAME := play-it-again
 WASM        := plugin.wasm
 NDP         := $(PLUGIN_NAME).ndp
 

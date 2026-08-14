@@ -1,4 +1,4 @@
-# Navidrome Play Again — Plugin Specification
+# Navidrome Play it again — Plugin Specification
 
 ## Overview
 
@@ -192,7 +192,7 @@ Because the endpoint uses **indexes** (not IDs) for removal, the plugin must:
 
 ### Play Later
 
-1. Drop `play-again.ndp` into Navidrome's plugins folder (e.g. `/data/plugins/`).
+1. Drop `play-it-again.ndp` into Navidrome's plugins folder (e.g. `/data/plugins/`).
 2. In Navidrome → Settings → Plugins, enable the plugin.
 3. Assign your user account to the plugin (required for scrobble events to fire).
 4. Optionally adjust `playlist_name` and `threshold` in the plugin config.
@@ -273,7 +273,7 @@ A pool of `fr_album_count × fr_pool_multiplier` least-recently-played albums is
 ```bash
 # Prerequisites: TinyGo, Go
 tinygo build -o plugin.wasm -target wasip1 -buildmode=c-shared .
-zip -j play-again.ndp manifest.json plugin.wasm
+zip -j play-it-again.ndp manifest.json plugin.wasm
 ```
 
 Minimum Navidrome version: **0.54** (plugin system introduction). Tested target: **0.61.2**.

@@ -1,5 +1,5 @@
 {
-  "name": "Play Again",
+  "name": "Play it again",
   "author": "Bob",
   "version": "2.0.0",
   "description": "Removes albums from your Play Later playlist once you've listened to enough tracks. Also maintains a Forgotten Records playlist of random complete albums you haven't played in a while.",

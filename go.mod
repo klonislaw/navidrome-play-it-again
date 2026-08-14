@@ -1,4 +1,4 @@
-module navidrome-play-again
+module navidrome-play-it-again
 
 go 1.25
 
