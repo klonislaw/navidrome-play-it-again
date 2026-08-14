@@ -90,12 +90,20 @@
       "type": "VerticalLayout",
       "elements": [
         {
+          "type": "Heading",
+          "text": "Play later"
+        },
+        {
           "type": "Control",
           "scope": "#/properties/playlater_playlist_name"
         },
         {
           "type": "Control",
           "scope": "#/properties/playlater_threshold"
+        },
+        {
+          "type": "Heading",
+          "text": "Forgotten records"
         },
         {
           "type": "Control",
