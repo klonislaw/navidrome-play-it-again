@@ -2,7 +2,7 @@
   "name": "Play it again",
   "author": "Bob",
   "version": "2.0.0",
-  "description": "Removes albums from your Play Later playlist once you've listened to enough tracks. Also maintains a Forgotten Records playlist of random complete albums you haven't played in a while.",
+  "description": "Two smart playlists to help you rediscover dusty corners of your libary. Play later to track albums to play again. Forgotten records to bring up your least recently played albums.",
   "permissions": {
     "subsonicAPI": {
       "reason": "Read and modify the Play Later and Forgotten Records playlists"
@@ -95,7 +95,7 @@
           "elements": [
             {
               "type": "Label",
-              "text": "Use playlist to track albums you want to play later. As you play tracks the albums are automatically removed from the playlist."
+              "text": "Use playlist to track albums you want to play later. As you play tracks the albums are automatically removed from the playlist.s"
             },
             {
               "type": "Label",
