@@ -94,6 +94,14 @@
           "label": "Play later",
           "elements": [
             {
+              "type": "Label",
+              "text": "Use playlist to track albums you want to play later. As you play tracks the albums are automatically removed from the playlist."
+            },
+            {
+              "type": "Label",
+              "text": "\u200B"
+            },
+            {
               "type": "Control",
               "scope": "#/properties/playlater_playlist_name"
             },
@@ -107,6 +115,14 @@
           "type": "Group",
           "label": "Forgotten records",
           "elements": [
+            {
+              "type": "Label",
+              "text": "The Forgotten records playlist is automatically filled with a selection of your least recently played albums."
+            },
+            {
+              "type": "Label",
+              "text": "\u200B"
+            },
             {
               "type": "Control",
               "scope": "#/properties/forgottenrecords_playlist_name"
@@ -133,7 +149,7 @@
             },
             {
               "type": "Label",
-              "text": "The play list is updated according to the cron schedule. If you want to update it now, toggle this option and play a track. Don't forget to turn it off after you're done. (This is because of Navidrome plugin limitations)"
+              "text": "The Forgotten records playlist is updated according to the cron schedule. If you want to update it now, toggle this option and play a track. Don't forget to turn it off after you're done. (This is because of Navidrome plugin limitations)"
             }
           ]
         },
