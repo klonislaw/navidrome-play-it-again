@@ -1,8 +1,9 @@
 {
   "name": "Play it again",
-  "author": "Bob",
+  "author": "Bob Corporaal",
   "version": "2.0.0",
   "description": "Two smart playlists to help you rediscover dusty corners of your libary. Play later to track albums to play again. Forgotten records to bring up your least recently played albums.",
+  "website": "https://github.com/bcorporaal/navidrome-play-it-again",
   "permissions": {
     "subsonicAPI": {
       "reason": "Read and modify the Play Later and Forgotten Records playlists"
