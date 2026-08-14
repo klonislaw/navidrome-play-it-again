@@ -90,44 +90,48 @@
       "type": "VerticalLayout",
       "elements": [
         {
-          "type": "Heading",
-          "text": "Play later"
+          "type": "Group",
+          "label": "Play later",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/playlater_playlist_name"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/playlater_threshold"
+            }
+          ]
         },
         {
-          "type": "Control",
-          "scope": "#/properties/playlater_playlist_name"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/playlater_threshold"
-        },
-        {
-          "type": "Heading",
-          "text": "Forgotten records"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/forgottenrecords_playlist_name"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/forgottenrecords_album_count"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/forgottenrecords_pool_multiplier"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/forgottenrecords_threshold"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/forgottenrecords_schedule"
-        },
-        {
-          "type": "Control",
-          "scope": "#/properties/forgottenrecords_refresh_now"
+          "type": "Group",
+          "label": "Forgotten records",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_playlist_name"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_album_count"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_pool_multiplier"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_threshold"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_schedule"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_refresh_now"
+            }
+          ]
         },
         {
           "type": "Control",
