@@ -33,7 +33,7 @@
         "playlater_threshold": {
           "type": "integer",
           "title": "Album Removal Threshold (%)",
-          "description": "Percentage of distinct album tracks that must be scrobbled before the album is removed from the Play Later playlist (1–100).",
+          "description": "Percentage of album tracks that must be scrobbled before the complete album is removed from the playlist (1–100).",
           "default": 30,
           "minimum": 1,
           "maximum": 100
@@ -46,7 +46,7 @@
         },
         "forgottenrecords_album_count": {
           "type": "integer",
-          "title": "Albums per Rebuild",
+          "title": "Albums in playlist",
           "description": "Number of complete albums to include in the Forgotten Records playlist.",
           "default": 8,
           "minimum": 1
@@ -61,7 +61,7 @@
         "forgottenrecords_threshold": {
           "type": "integer",
           "title": "Album Removal Threshold (%)",
-          "description": "Percentage of distinct album tracks that must be scrobbled before the album is removed from Forgotten Records playlist (1–100).",
+          "description": "Percentage of album tracks that must be scrobbled before the complete album is removed from the playlist (1–100).",
           "default": 30,
           "minimum": 1,
           "maximum": 100
@@ -74,8 +74,8 @@
         },
         "forgottenrecords_refresh_now": {
           "type": "boolean",
-          "title": "Refresh Forgotten Records Now",
-          "description": "Enable this and play any track to trigger an immediate rebuild of the Forgotten Records playlist. The rebuild runs shortly after your next scrobble. Disable afterwards to avoid repeated rebuilds.",
+          "title": "Refresh Forgotten records after every scrobble",
+          "description": "The play list is updated according to the cron schedule. If you want to update it now, toggle this option and play a track. Don't forget to turn it off after you're done. (This is because of Navidrome plugin limitations)",
           "default": false
         },
         "logging": {
@@ -126,6 +126,10 @@
             {
               "type": "Control",
               "scope": "#/properties/forgottenrecords_schedule"
+            },
+            {
+              "type": "Label",
+              "text": "Placeholder description to be edited later"
             },
             {
               "type": "Control",
