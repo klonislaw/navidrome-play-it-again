@@ -24,6 +24,12 @@
     "schema": {
       "type": "object",
       "properties": {
+        "playlater_enabled": {
+          "type": "boolean",
+          "title": "Enable Play later",
+          "description": "When enabled, the plugin watches the Play Later playlist and removes albums as you scrobble them. When disabled, the plugin leaves the playlist untouched.",
+          "default": true
+        },
         "playlater_playlist_name": {
           "type": "string",
           "title": "Play later playlist name",
@@ -37,6 +43,12 @@
           "default": 30,
           "minimum": 1,
           "maximum": 100
+        },
+        "forgottenrecords_enabled": {
+          "type": "boolean",
+          "title": "Enable Forgotten records",
+          "description": "When enabled, the plugin maintains the Forgotten Records playlist by scheduling rebuilds and removing albums as you scrobble them. When disabled, no scheduled or scrobble-driven rebuilds run.",
+          "default": true
         },
         "forgottenrecords_playlist_name": {
           "type": "string",
@@ -95,7 +107,15 @@
           "elements": [
             {
               "type": "Label",
-              "text": "Use playlist to track albums you want to play later. As you play tracks the albums are automatically removed from the playlist.s"
+              "text": "Use playlist to track albums you want to play later. As you play tracks the albums are automatically removed from the playlist."
+            },
+            {
+              "type": "Label",
+              "text": "\u200B"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/playlater_enabled"
             },
             {
               "type": "Label",
@@ -118,6 +138,14 @@
             {
               "type": "Label",
               "text": "The Forgotten records playlist is automatically filled with a selection of your least recently played albums."
+            },
+            {
+              "type": "Label",
+              "text": "\u200B"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_enabled"
             },
             {
               "type": "Label",

@@ -30,17 +30,19 @@ The playlist is created automatically if it doesn't exist — no manual setup ne
 
 All options are adjustable in Navidrome → Settings → Plugins after installation.
 
-| Option                                  | Default             | Description                                                                                     |
-| --------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------- |
-| Play Later Playlist Name                | `Play Later`        | Name of the Play Later playlist to watch (case-insensitive)                                     |
-| Album Removal Threshold (%)             | `30`                | Percentage of distinct tracks that must be scrobbled before an album is removed from Play Later |
-| Forgotten Records Playlist Name         | `Forgotten records` | Name of the Forgotten Records playlist (auto-created)                                           |
-| Albums per Rebuild                      | `8`                 | Number of complete albums to include in each rebuild                                            |
-| Pool Multiplier                         | `3`                 | Pool size = Albums per Rebuild × multiplier; random selection picks from this pool              |
-| Forgotten Records Removal Threshold (%) | `30`                | Percentage of tracks that must be scrobbled before removal from Forgotten Records               |
-| Rebuild Schedule (Cron)                 | `0 0 * * *`         | Cron expression for rebuild (requires Navidrome restart to change)                              |
-| Refresh Forgotten Records Now           | off                 | Enable and play any track to trigger an immediate rebuild                                       |
-| Enable Logging                          | off                 | Write plugin activity to the KVStore log buffer                                                 |
+| Option                                  | Default             | Description                                                                                                 |
+| --------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Enable Play Later                       | on                  | Master switch for the Play Later feature. Turn off to leave the playlist untouched                          |
+| Play Later Playlist Name                | `Play Later`        | Name of the Play Later playlist to watch (case-insensitive)                                                 |
+| Album Removal Threshold (%)             | `30`                | Percentage of distinct tracks that must be scrobbled before an album is removed from Play Later             |
+| Enable Forgotten Records                | on                  | Master switch for the Forgotten Records feature. Turn off to disable scheduled and scrobble-driven rebuilds |
+| Forgotten Records Playlist Name         | `Forgotten records` | Name of the Forgotten Records playlist (auto-created)                                                       |
+| Albums per Rebuild                      | `8`                 | Number of complete albums to include in each rebuild                                                        |
+| Pool Multiplier                         | `3`                 | Pool size = Albums per Rebuild × multiplier; random selection picks from this pool                          |
+| Forgotten Records Removal Threshold (%) | `30`                | Percentage of tracks that must be scrobbled before removal from Forgotten Records                           |
+| Rebuild Schedule (Cron)                 | `0 0 * * *`         | Cron expression for rebuild (requires Navidrome restart to change)                                          |
+| Refresh Forgotten Records Now           | off                 | Enable and play any track to trigger an immediate rebuild                                                   |
+| Enable Logging                          | off                 | Write plugin activity to the KVStore log buffer                                                             |
 
 A threshold of 30% means: for a 10-track album, playing any 3 distinct tracks removes it. Setting it to 1 removes the album after the very first track; 100 requires every track.
 

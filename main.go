@@ -19,12 +19,14 @@ import (
 
 const (
 	// Play Later settings
+	defaultPlayLaterEnabled      = true
 	defaultPlayLaterPlaylistName = "Play Later"
 	defaultPlayLaterThreshold    = 30
 	playlistCacheTTL             = 300  // seconds — playlist ID cache lifetime
 	trackInfoCacheTTL            = 3600 // seconds — track→album and album→count are immutable
 
 	// Forgotten Records settings
+	defaultForgottenRecordsEnabled       = true
 	defaultForgottenRecordsPlaylistName  = "Forgotten records"
 	defaultForgottenRecordsAlbumCount    = 8
 	defaultForgottenRecordsAlbumPoolSize = 50
@@ -84,23 +86,29 @@ func (p *plugin) Scrobble(req scrobbler.ScrobbleRequest) error {
 	}
 
 	// Play Later: check and possibly remove from the Play Later playlist.
-	checkPlaylistRemoval(username, trackID, albumID, req.Track.Album, totalTracks,
-		configStr("playlater_playlist_name", defaultPlayLaterPlaylistName),
-		clamp(configInt("playlater_threshold", defaultPlayLaterThreshold), 1, 100), "")
+	if configBool("playlater_enabled", defaultPlayLaterEnabled) {
+		checkPlaylistRemoval(username, trackID, albumID, req.Track.Album, totalTracks,
+			configStr("playlater_playlist_name", defaultPlayLaterPlaylistName),
+			clamp(configInt("playlater_threshold", defaultPlayLaterThreshold), 1, 100), "")
+	}
 
 	// Forgotten Records: same removal logic, separate playlist and KV namespace.
-	checkPlaylistRemoval(username, trackID, albumID, req.Track.Album, totalTracks,
-		configStr("forgottenrecords_playlist_name", defaultForgottenRecordsPlaylistName),
-		clamp(configInt("forgottenrecords_threshold", defaultForgottenRecordsThreshold), 1, 100), "fr:")
+	if configBool("forgottenrecords_enabled", defaultForgottenRecordsEnabled) {
+		checkPlaylistRemoval(username, trackID, albumID, req.Track.Album, totalTracks,
+			configStr("forgottenrecords_playlist_name", defaultForgottenRecordsPlaylistName),
+			clamp(configInt("forgottenrecords_threshold", defaultForgottenRecordsThreshold), 1, 100), "fr:")
+	}
 
 	// Manual Forgotten Records refresh: if enabled, schedule a one-time rebuild
 	// on the next scrobble. Rate-limited via KVStore timestamp.
-	if v, ok := host.ConfigGet("forgottenrecords_refresh_now"); ok && v == "true" {
-		if shouldTriggerManualRefresh() {
-			if _, err := host.SchedulerScheduleOneTime(0, "rebuild-now", frRefreshOnceID); err != nil {
-				logf("fr: failed to schedule manual refresh: %v", err)
-			} else {
-				logf("fr: manual refresh scheduled")
+	if configBool("forgottenrecords_enabled", defaultForgottenRecordsEnabled) {
+		if v, ok := host.ConfigGet("forgottenrecords_refresh_now"); ok && v == "true" {
+			if shouldTriggerManualRefresh() {
+				if _, err := host.SchedulerScheduleOneTime(0, "rebuild-now", frRefreshOnceID); err != nil {
+					logf("fr: failed to schedule manual refresh: %v", err)
+				} else {
+					logf("fr: manual refresh scheduled")
+				}
 			}
 		}
 	}
@@ -111,6 +119,16 @@ func (p *plugin) Scrobble(req scrobbler.ScrobbleRequest) error {
 // OnInit is called once when the plugin is loaded (not on hot-reload).
 // It registers the recurring schedule for the Forgotten Records rebuild.
 func (p *plugin) OnInit() error {
+	// If Forgotten Records is disabled, cancel any lingering schedule and exit.
+	if !configBool("forgottenrecords_enabled", defaultForgottenRecordsEnabled) {
+		if err := host.SchedulerCancelSchedule(frScheduleID); err != nil {
+			logf("fr: disabled — cancel existing schedule (non-fatal): %v", err)
+		} else {
+			logf("fr: disabled — recurring rebuild schedule cancelled")
+		}
+		return nil
+	}
+
 	cron := configStr("forgottenrecords_schedule", defaultForgottenRecordsSchedule)
 
 	// Cancel any existing schedule with the same ID (ignore errors if not found).
@@ -133,6 +151,12 @@ func (p *plugin) OnCallback(req scheduler.SchedulerCallbackRequest) error {
 		return nil
 	}
 	logf("fr: rebuild callback received")
+
+	// Defensive: honour the enable toggle even if a stale schedule fires.
+	if !configBool("forgottenrecords_enabled", defaultForgottenRecordsEnabled) {
+		logf("fr: enabled=false — skipping rebuild callback")
+		return nil
+	}
 
 	users, err := host.UsersGetUsers()
 	if err != nil {
@@ -682,6 +706,24 @@ func configInt(key string, fallback int) int {
 		return int(v)
 	}
 	return fallback
+}
+
+// configBool reads a boolean config value. Navidrome stores booleans as the
+// strings "true"/"false", so we parse those and fall back to the provided
+// default when the key is missing or has an unexpected value.
+func configBool(key string, fallback bool) bool {
+	v, ok := host.ConfigGet(key)
+	if !ok {
+		return fallback
+	}
+	switch v {
+	case "true":
+		return true
+	case "false":
+		return false
+	default:
+		return fallback
+	}
 }
 
 func clamp(v, min, max int) int {
