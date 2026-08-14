@@ -25,16 +25,16 @@ const (
 	trackInfoCacheTTL            = 3600 // seconds — track→album and album→count are immutable
 
 	// Forgotten Records settings
-	defaultForgottenRecordsPlaylistName   = "Forgotten records"
-	defaultForgottenRecordsAlbumCount     = 8
-	defaultForgottenRecordsPoolMultiplier = 3
-	defaultForgottenRecordsThreshold      = 30
-	defaultForgottenRecordsSchedule       = "0 0 * * *"
-	frScheduleID                          = "fr-rebuild"
-	frRefreshOnceID                       = "fr-refresh-once"
-	manualRefreshRateLimit                = 300 // seconds — rate limit for manual refresh trigger
-	albumListPageSize                     = 500
-	playlistBatchSize                     = 200
+	defaultForgottenRecordsPlaylistName  = "Forgotten records"
+	defaultForgottenRecordsAlbumCount    = 8
+	defaultForgottenRecordsAlbumPoolSize = 50
+	defaultForgottenRecordsThreshold     = 30
+	defaultForgottenRecordsSchedule      = "0 0 * * *"
+	frScheduleID                         = "fr-rebuild"
+	frRefreshOnceID                      = "fr-refresh-once"
+	manualRefreshRateLimit               = 300 // seconds — rate limit for manual refresh trigger
+	albumListPageSize                    = 500
+	playlistBatchSize                    = 200
 )
 
 // --- Plugin ---
@@ -205,7 +205,7 @@ func checkPlaylistRemoval(username, trackID, albumID, albumName string, totalTra
 func rebuildForgottenRecords(username string) error {
 	playlistName := configStr("forgottenrecords_playlist_name", defaultForgottenRecordsPlaylistName)
 	albumCount := clamp(configInt("forgottenrecords_album_count", defaultForgottenRecordsAlbumCount), 1, 1000)
-	multiplier := clamp(configInt("forgottenrecords_pool_multiplier", defaultForgottenRecordsPoolMultiplier), 1, 100)
+	albumPoolSize := clamp(configInt("forgottenrecords_album_pool_size", defaultForgottenRecordsAlbumPoolSize), 1, 1000)
 
 	albums, err := fetchAllAlbums(username)
 	if err != nil {
@@ -222,7 +222,12 @@ func rebuildForgottenRecords(username string) error {
 		return albums[i].Played < albums[j].Played
 	})
 
-	poolSize := albumCount * multiplier
+	// Use the album pool size directly, but ensure it's at least albumCount
+	// and not larger than the total library album size.
+	poolSize := albumPoolSize
+	if poolSize < albumCount {
+		poolSize = albumCount
+	}
 	if poolSize > len(albums) {
 		poolSize = len(albums)
 	}

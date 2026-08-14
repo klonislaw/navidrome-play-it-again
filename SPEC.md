@@ -41,7 +41,7 @@ The plugin maintains a second playlist — **Forgotten Records** — that collec
 On each rebuild:
 
 1. All albums in the library are fetched and sorted by last-played timestamp (never-played first, then least-recently-played).
-2. A candidate pool of `forgottenrecords_album_count × forgottenrecords_pool_multiplier` albums is taken from the top of the sorted list.
+2. A candidate pool of `forgottenrecords_album_pool_size` albums is taken from the top of the sorted list.
 3. `fr_album_count` albums are randomly selected from the pool.
 4. The playlist is fully replaced with all tracks from the selected albums.
 
@@ -64,14 +64,14 @@ Declared in the plugin manifest and editable in Navidrome's plugin UI:
 
 ### Forgotten Records
 
-| Key                                | Type    | Default             | Description                                                                                                                    |
-| ---------------------------------- | ------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `forgottenrecords_playlist_name`   | string  | `Forgotten records` | Name of the Forgotten Records playlist (auto-created if missing)                                                               |
-| `forgottenrecords_album_count`     | integer | `8`                 | Number of complete albums to include in each rebuild                                                                           |
-| `forgottenrecords_pool_multiplier` | integer | `3`                 | Pool size = `forgottenrecords_album_count` × multiplier; random selection picks from this pool of least-recently-played albums |
-| `forgottenrecords_threshold`       | integer | `30`                | % of distinct tracks that must be scrobbled before removal from Forgotten Records                                              |
-| `forgottenrecords_schedule`        | string  | `0 0 * * *`         | Cron expression for rebuild schedule (requires Navidrome restart to change)                                                    |
-| `forgottenrecords_refresh_now`     | boolean | `false`             | Enable and play any track to trigger an immediate rebuild (rate-limited to 5 min)                                              |
+| Key                                | Type    | Default             | Description                                                                                                                                                                           |
+| ---------------------------------- | ------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `forgottenrecords_playlist_name`   | string  | `Forgotten records` | Name of the Forgotten Records playlist (auto-created if missing)                                                                                                                      |
+| `forgottenrecords_album_count`     | integer | `8`                 | Number of complete albums to include in each rebuild                                                                                                                                  |
+| `forgottenrecords_album_pool_size` | integer | `50`                | Directly sets the pool size for random selection. If smaller than `forgottenrecords_album_count`, the album count is used. If larger than the library size, the library size is used. |
+| `forgottenrecords_threshold`       | integer | `30`                | % of distinct tracks that must be scrobbled before removal from Forgotten Records                                                                                                     |
+| `forgottenrecords_schedule`        | string  | `0 0 * * *`         | Cron expression for rebuild schedule (requires Navidrome restart to change)                                                                                                           |
+| `forgottenrecords_refresh_now`     | boolean | `false`             | Enable and play any track to trigger an immediate rebuild (rate-limited to 5 min)                                                                                                     |
 
 ---
 
@@ -203,7 +203,7 @@ Because the endpoint uses **indexes** (not IDs) for removal, the plugin must:
 
 1. After enabling the plugin (steps 1–3 above), the Forgotten Records playlist is created automatically on the first scheduled rebuild.
 2. To trigger it immediately, restart Navidrome (the schedule is registered on plugin load).
-3. Optionally adjust `forgottenrecords_playlist_name`, `forgottenrecords_album_count`, `forgottenrecords_pool_multiplier`, `forgottenrecords_threshold`, and `forgottenrecords_schedule` in the plugin config.
+3. Optionally adjust `forgottenrecords_playlist_name`, `forgottenrecords_album_count`, `forgottenrecords_album_pool_size`, `forgottenrecords_threshold`, and `forgottenrecords_schedule` in the plugin config.
 4. Changing `forgottenrecords_schedule` requires a Navidrome restart (not hot-reload) to take effect.
 
 ---
@@ -249,7 +249,7 @@ rebuildForgottenRecords(username):
 
 ### Random selection
 
-A pool of `forgottenrecords_album_count × forgottenrecords_pool_multiplier` least-recently-played albums is built. From this pool, `forgottenrecords_album_count` albums are randomly selected (without replacement) using `math/rand` seeded with the current time. This gives variety while ensuring only long-unplayed albums are candidates.
+A pool of `forgottenrecords_album_pool_size` least-recently-played albums is built. From this pool, `forgottenrecords_album_count` albums are randomly selected (without replacement) using `math/rand` seeded with the current time. This gives variety while ensuring only long-unplayed albums are candidates.
 
 ### Schedule lifecycle
 

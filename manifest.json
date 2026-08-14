@@ -26,13 +26,13 @@
       "properties": {
         "playlater_playlist_name": {
           "type": "string",
-          "title": "Play Later Playlist Name",
+          "title": "Play later playlist name",
           "description": "Exact name of the existing 'Play Later' playlist to watch (case-insensitive).",
           "default": "Play Later"
         },
         "playlater_threshold": {
           "type": "integer",
-          "title": "Album Removal Threshold (%)",
+          "title": "Album removal threshold (%)",
           "description": "Percentage of album tracks that must be scrobbled before the complete album is removed from the playlist (1–100).",
           "default": 30,
           "minimum": 1,
@@ -40,27 +40,27 @@
         },
         "forgottenrecords_playlist_name": {
           "type": "string",
-          "title": "Forgotten Records Playlist Name",
+          "title": "Forgotten records playlist name",
           "description": "Name of the Forgotten Records playlist (case-insensitive). Created automatically if it doesn't exist.",
           "default": "Forgotten records"
         },
         "forgottenrecords_album_count": {
           "type": "integer",
-          "title": "Albums in playlist",
+          "title": "Albums in the playlist",
           "description": "Number of complete albums to include in the Forgotten Records playlist.",
           "default": 8,
           "minimum": 1
         },
-        "forgottenrecords_pool_multiplier": {
+        "forgottenrecords_album_pool_size": {
           "type": "integer",
-          "title": "Pool Multiplier",
-          "description": "Size of the candidate pool as a multiple of Albums per Rebuild. E.g. 8 albums × multiplier 10 = 80 least-recently-played albums form the pool, 8 are randomly selected.",
-          "default": 10,
+          "title": "Album pool size",
+          "description": "The number of least recently scrobbled albums to randomly select from for the playlist.",
+          "default": 50,
           "minimum": 1
         },
         "forgottenrecords_threshold": {
           "type": "integer",
-          "title": "Album Removal Threshold (%)",
+          "title": "Album removal threshold (%)",
           "description": "Percentage of album tracks that must be scrobbled before the complete album is removed from the playlist (1–100).",
           "default": 30,
           "minimum": 1,
@@ -68,7 +68,7 @@
         },
         "forgottenrecords_schedule": {
           "type": "string",
-          "title": "Rebuild Schedule (Cron)",
+          "title": "Rebuild schedule (Cron)",
           "description": "Cron expression for how often the Forgotten Records playlist is rebuilt. Default: daily at midnight (0 0 * * *). Requires Navidrome restart to take effect.",
           "default": "0 0 * * *"
         },
@@ -80,7 +80,7 @@
         },
         "logging": {
           "type": "boolean",
-          "title": "Enable Logging",
+          "title": "Enable logging",
           "description": "Write plugin activity to the KVStore log buffer. Read with the Python snippet in README.md.",
           "default": false
         }
@@ -117,7 +117,7 @@
             },
             {
               "type": "Control",
-              "scope": "#/properties/forgottenrecords_pool_multiplier"
+              "scope": "#/properties/forgottenrecords_album_pool_size"
             },
             {
               "type": "Control",
@@ -128,12 +128,12 @@
               "scope": "#/properties/forgottenrecords_schedule"
             },
             {
-              "type": "Label",
-              "text": "Placeholder description to be edited later"
-            },
-            {
               "type": "Control",
               "scope": "#/properties/forgottenrecords_refresh_now"
+            },
+            {
+              "type": "Label",
+              "text": "The play list is updated according to the cron schedule. If you want to update it now, toggle this option and play a track. Don't forget to turn it off after you're done. (This is because of Navidrome plugin limitations)"
             }
           ]
         },
