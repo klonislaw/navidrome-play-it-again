@@ -1,6 +1,6 @@
 module navidrome-play-it-again
 
-go 1.25
+go 1.26
 
 require github.com/navidrome/navidrome/plugins/pdk/go v0.0.0-20260513204422-8f0b4930ff88
 

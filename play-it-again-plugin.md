@@ -323,7 +323,7 @@ func main() {}
 ```
 module play-it-again
 
-go 1.21
+go 1.26
 
 require (
     github.com/extism/go-pdk v1.0.0
@@ -362,7 +362,7 @@ clean:
 ### 1. Prerequisites
 
 - [TinyGo](https://tinygo.org/getting-started/install/) installed and on your `PATH`
-- Go 1.21+
+- Go 1.26+
 - The Navidrome source cloned alongside your plugin directory:
 
 ```
