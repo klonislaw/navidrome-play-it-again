@@ -24,13 +24,13 @@
     "schema": {
       "type": "object",
       "properties": {
-        "playlist_name": {
+        "playlater_playlist_name": {
           "type": "string",
           "title": "Play Later Playlist Name",
           "description": "Exact name of the existing 'Play Later' playlist to watch (case-insensitive).",
           "default": "Play Later"
         },
-        "threshold": {
+        "playlater_threshold": {
           "type": "integer",
           "title": "Album Removal Threshold (%)",
           "description": "Percentage of distinct album tracks that must be scrobbled before the album is removed from the Play Later playlist (1–100).",
@@ -38,41 +38,41 @@
           "minimum": 1,
           "maximum": 100
         },
-        "fr_playlist_name": {
+        "forgottenrecords_playlist_name": {
           "type": "string",
           "title": "Forgotten Records Playlist Name",
           "description": "Name of the Forgotten Records playlist (case-insensitive). Created automatically if it doesn't exist.",
           "default": "Forgotten records"
         },
-        "fr_album_count": {
+        "forgottenrecords_album_count": {
           "type": "integer",
           "title": "Albums per Rebuild",
           "description": "Number of complete albums to include in the Forgotten Records playlist.",
           "default": 8,
           "minimum": 1
         },
-        "fr_pool_multiplier": {
+        "forgottenrecords_pool_multiplier": {
           "type": "integer",
           "title": "Pool Multiplier",
           "description": "Size of the candidate pool as a multiple of Albums per Rebuild. E.g. 8 albums × multiplier 10 = 80 least-recently-played albums form the pool, 8 are randomly selected.",
           "default": 10,
           "minimum": 1
         },
-        "fr_threshold": {
+        "forgottenrecords_threshold": {
           "type": "integer",
           "title": "Album Removal Threshold (%)",
-          "description": "Percentage of distinct album tracks that must be scrobbled before the album is removed from Forgotten Records playlist(1–100).",
+          "description": "Percentage of distinct album tracks that must be scrobbled before the album is removed from Forgotten Records playlist (1–100).",
           "default": 30,
           "minimum": 1,
           "maximum": 100
         },
-        "fr_update_schedule": {
+        "forgottenrecords_schedule": {
           "type": "string",
           "title": "Rebuild Schedule (Cron)",
           "description": "Cron expression for how often the Forgotten Records playlist is rebuilt. Default: daily at midnight (0 0 * * *). Requires Navidrome restart to take effect.",
           "default": "0 0 * * *"
         },
-        "fr_refresh_now": {
+        "forgottenrecords_refresh_now": {
           "type": "boolean",
           "title": "Refresh Forgotten Records Now",
           "description": "Enable this and play any track to trigger an immediate rebuild of the Forgotten Records playlist. The rebuild runs shortly after your next scrobble. Disable afterwards to avoid repeated rebuilds.",
@@ -91,35 +91,35 @@
       "elements": [
         {
           "type": "Control",
-          "scope": "#/properties/playlist_name"
+          "scope": "#/properties/playlater_playlist_name"
         },
         {
           "type": "Control",
-          "scope": "#/properties/threshold"
+          "scope": "#/properties/playlater_threshold"
         },
         {
           "type": "Control",
-          "scope": "#/properties/fr_playlist_name"
+          "scope": "#/properties/forgottenrecords_playlist_name"
         },
         {
           "type": "Control",
-          "scope": "#/properties/fr_album_count"
+          "scope": "#/properties/forgottenrecords_album_count"
         },
         {
           "type": "Control",
-          "scope": "#/properties/fr_pool_multiplier"
+          "scope": "#/properties/forgottenrecords_pool_multiplier"
         },
         {
           "type": "Control",
-          "scope": "#/properties/fr_threshold"
+          "scope": "#/properties/forgottenrecords_threshold"
         },
         {
           "type": "Control",
-          "scope": "#/properties/fr_update_schedule"
+          "scope": "#/properties/forgottenrecords_schedule"
         },
         {
           "type": "Control",
-          "scope": "#/properties/fr_refresh_now"
+          "scope": "#/properties/forgottenrecords_refresh_now"
         },
         {
           "type": "Control",

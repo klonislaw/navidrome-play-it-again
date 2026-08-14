@@ -18,22 +18,23 @@ import (
 )
 
 const (
-	defaultPlaylistName = "Play Later"
-	defaultThreshold    = 30
-	playlistCacheTTL    = 300  // seconds — playlist ID cache lifetime
-	trackInfoCacheTTL   = 3600 // seconds — track→album and album→count are immutable
+	// Play Later settings
+	defaultPlayLaterPlaylistName = "Play Later"
+	defaultPlayLaterThreshold    = 30
+	playlistCacheTTL             = 300  // seconds — playlist ID cache lifetime
+	trackInfoCacheTTL            = 3600 // seconds — track→album and album→count are immutable
 
-	// Forgotten Records defaults
-	defaultFRPlaylistName   = "Forgotten records"
-	defaultFRAlbumCount     = 8
-	defaultFRPoolMultiplier = 3
-	defaultFRThreshold      = 30
-	defaultFRSchedule       = "0 0 * * *"
-	frScheduleID            = "fr-rebuild"
-	frRefreshOnceID         = "fr-refresh-once"
-	manualRefreshRateLimit  = 300 // seconds — rate limit for manual refresh trigger
-	albumListPageSize       = 500
-	playlistBatchSize       = 200
+	// Forgotten Records settings
+	defaultForgottenRecordsPlaylistName   = "Forgotten records"
+	defaultForgottenRecordsAlbumCount     = 8
+	defaultForgottenRecordsPoolMultiplier = 3
+	defaultForgottenRecordsThreshold      = 30
+	defaultForgottenRecordsSchedule       = "0 0 * * *"
+	frScheduleID                          = "fr-rebuild"
+	frRefreshOnceID                       = "fr-refresh-once"
+	manualRefreshRateLimit                = 300 // seconds — rate limit for manual refresh trigger
+	albumListPageSize                     = 500
+	playlistBatchSize                     = 200
 )
 
 // --- Plugin ---
@@ -84,17 +85,17 @@ func (p *plugin) Scrobble(req scrobbler.ScrobbleRequest) error {
 
 	// Play Later: check and possibly remove from the Play Later playlist.
 	checkPlaylistRemoval(username, trackID, albumID, req.Track.Album, totalTracks,
-		configStr("playlist_name", defaultPlaylistName),
-		clamp(configInt("threshold", defaultThreshold), 1, 100), "")
+		configStr("playlater_playlist_name", defaultPlayLaterPlaylistName),
+		clamp(configInt("playlater_threshold", defaultPlayLaterThreshold), 1, 100), "")
 
 	// Forgotten Records: same removal logic, separate playlist and KV namespace.
 	checkPlaylistRemoval(username, trackID, albumID, req.Track.Album, totalTracks,
-		configStr("fr_playlist_name", defaultFRPlaylistName),
-		clamp(configInt("fr_threshold", defaultFRThreshold), 1, 100), "fr:")
+		configStr("forgottenrecords_playlist_name", defaultForgottenRecordsPlaylistName),
+		clamp(configInt("forgottenrecords_threshold", defaultForgottenRecordsThreshold), 1, 100), "fr:")
 
 	// Manual Forgotten Records refresh: if enabled, schedule a one-time rebuild
 	// on the next scrobble. Rate-limited via KVStore timestamp.
-	if v, ok := host.ConfigGet("fr_refresh_now"); ok && v == "true" {
+	if v, ok := host.ConfigGet("forgottenrecords_refresh_now"); ok && v == "true" {
 		if shouldTriggerManualRefresh() {
 			if _, err := host.SchedulerScheduleOneTime(0, "rebuild-now", frRefreshOnceID); err != nil {
 				logf("fr: failed to schedule manual refresh: %v", err)
@@ -110,7 +111,7 @@ func (p *plugin) Scrobble(req scrobbler.ScrobbleRequest) error {
 // OnInit is called once when the plugin is loaded (not on hot-reload).
 // It registers the recurring schedule for the Forgotten Records rebuild.
 func (p *plugin) OnInit() error {
-	cron := configStr("fr_update_schedule", defaultFRSchedule)
+	cron := configStr("forgottenrecords_schedule", defaultForgottenRecordsSchedule)
 
 	// Cancel any existing schedule with the same ID (ignore errors if not found).
 	if err := host.SchedulerCancelSchedule(frScheduleID); err != nil {
@@ -202,9 +203,9 @@ func checkPlaylistRemoval(username, trackID, albumID, albumName string, totalTra
 // ones, randomly picks albumCount from a pool of albumCount×multiplier, and
 // fully rebuilds the playlist with their tracks.
 func rebuildForgottenRecords(username string) error {
-	playlistName := configStr("fr_playlist_name", defaultFRPlaylistName)
-	albumCount := clamp(configInt("fr_album_count", defaultFRAlbumCount), 1, 1000)
-	multiplier := clamp(configInt("fr_pool_multiplier", defaultFRPoolMultiplier), 1, 100)
+	playlistName := configStr("forgottenrecords_playlist_name", defaultForgottenRecordsPlaylistName)
+	albumCount := clamp(configInt("forgottenrecords_album_count", defaultForgottenRecordsAlbumCount), 1, 1000)
+	multiplier := clamp(configInt("forgottenrecords_pool_multiplier", defaultForgottenRecordsPoolMultiplier), 1, 100)
 
 	albums, err := fetchAllAlbums(username)
 	if err != nil {
