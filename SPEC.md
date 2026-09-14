@@ -1,3 +1,9 @@
+---
+title: SPEC
+type: note
+permalink: play-it-again/spec
+---
+
 # Navidrome Play it again — Plugin Specification
 
 ## Overview
@@ -41,9 +47,10 @@ The plugin maintains a second playlist — **Forgotten Records** — that collec
 On each rebuild:
 
 1. All albums in the library are fetched and sorted by last-played timestamp (never-played first, then least-recently-played).
-2. A candidate pool of `forgottenrecords_album_pool_size` albums is taken from the top of the sorted list.
-3. `fr_album_count` albums are randomly selected from the pool.
-4. The playlist is fully replaced with all tracks from the selected albums.
+2. If genre filters are configured, only albums matching at least one of the selected genres are included.
+3. A candidate pool of `forgottenrecords_album_pool_size` albums is taken from the top of the sorted list.
+4. `fr_album_count` albums are randomly selected from the pool.
+5. The playlist is fully replaced with all tracks from the selected albums.
 
 As the user listens to albums in the playlist, the same threshold-based removal logic from Play Later applies: once enough distinct tracks from an album have been played, the album is removed. Fresh albums take its place on the next scheduled rebuild.
 
@@ -73,6 +80,7 @@ Declared in the plugin manifest and editable in Navidrome's plugin UI:
 | `forgottenrecords_album_pool_size` | integer | `50`                | Directly sets the pool size for random selection. If smaller than `forgottenrecords_album_count`, the album count is used. If larger than the library size, the library size is used. |
 | `forgottenrecords_threshold`       | integer | `30`                | % of distinct tracks that must be scrobbled before removal from Forgotten Records                                                                                                     |
 | `forgottenrecords_schedule`        | string  | `0 0 * * *`         | Cron expression for rebuild schedule (requires Navidrome restart to change)                                                                                                           |
+| `forgottenrecords_genre_1`–`_5`   | string  | (empty)             | Filter albums by genre (case-insensitive). Up to 5 genres. Leave all empty to include all genres.                                                    |
 
 ---
 
@@ -237,22 +245,23 @@ Because the endpoint uses **indexes** (not IDs) for removal, the plugin must:
 ```
 rebuildForgottenRecords(username):
   1. Fetch all albums via getAlbumList2 (paginated, 500 per page)
-  2. Sort by played timestamp ascending (never-played first)
-  3. poolSize ← fr_album_count × fr_pool_multiplier (clamped to library size)
-  4. pool ← first poolSize albums from sorted list
-  5. selected ← randomSelect(pool, fr_album_count)
-  6. For each album in selected:
+  2. If genre filters configured: filter albums to only those matching any selected genre
+  3. Sort by played timestamp ascending (never-played first)
+  4. poolSize ← fr_album_count × fr_pool_multiplier (clamped to library size)
+  5. pool ← first poolSize albums from sorted list
+  6. selected ← randomSelect(pool, fr_album_count)
+  7. For each album in selected:
      - Delete fr:played:{username}:{albumId} (clean slate)
      - Fetch track IDs via getAlbum
      - Collect all track IDs
-  7. Find or create the Forgotten Records playlist
-  8. Clear the playlist (remove all entries in batches of 200)
-  9. Add all track IDs to the playlist (in batches of 200)
+  8. Find or create the Forgotten Records playlist
+  9. Clear the playlist (remove all entries in batches of 200)
+  10. Add all track IDs to the playlist (in batches of 200)
 ```
 
 ### Random selection
 
-A pool of `forgottenrecords_album_pool_size` least-recently-played albums is built. From this pool, `forgottenrecords_album_count` albums are randomly selected (without replacement) using `math/rand` seeded with the current time. This gives variety while ensuring only long-unplayed albums are candidates.
+A pool of `forgottenrecords_album_pool_size` least-recently-played albums is built. If genre filters are configured, only albums matching at least one of the selected genres are included before the pool is formed. From this pool, `forgottenrecords_album_count` albums are randomly selected (without replacement) using `math/rand` seeded with the current time. This gives variety while ensuring only long-unplayed albums are candidates. If fewer albums match the genre filter than the pool size, the pool shrinks to the available matches.
 
 ### Schedule lifecycle
 

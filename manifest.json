@@ -84,6 +84,31 @@
           "title": "Rebuild schedule (Cron)",
           "description": "Cron expression for how often the Forgotten Records playlist is rebuilt. Default: daily at midnight (0 0 * * *). Requires Navidrome restart to take effect.",
           "default": "0 0 * * *"
+        },
+        "forgottenrecords_genre_1": {
+          "type": "string",
+          "title": "Genre 1",
+          "description": "Filter albums by genre. Leave empty to include all genres."
+        },
+        "forgottenrecords_genre_2": {
+          "type": "string",
+          "title": "Genre 2",
+          "description": "Filter albums by genre. Leave empty to include all genres."
+        },
+        "forgottenrecords_genre_3": {
+          "type": "string",
+          "title": "Genre 3",
+          "description": "Filter albums by genre. Leave empty to include all genres."
+        },
+        "forgottenrecords_genre_4": {
+          "type": "string",
+          "title": "Genre 4",
+          "description": "Filter albums by genre. Leave empty to include all genres."
+        },
+        "forgottenrecords_genre_5": {
+          "type": "string",
+          "title": "Genre 5",
+          "description": "Filter albums by genre. Leave empty to include all genres."
         }
       }
     },
@@ -159,6 +184,34 @@
             {
               "type": "Control",
               "scope": "#/properties/forgottenrecords_schedule"
+            },
+            {
+              "type": "Label",
+              "text": "\u200B"
+            },
+            {
+              "type": "Label",
+              "text": "Filter by genre (case-insensitive, leave empty to include all):"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_genre_1"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_genre_2"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_genre_3"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_genre_4"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_genre_5"
             },
             {
               "type": "Label",

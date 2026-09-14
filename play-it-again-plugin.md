@@ -1,3 +1,9 @@
+---
+title: play-it-again-plugin
+type: note
+permalink: play-it-again/play-it-again-plugin
+---
+
 # Play it again — Navidrome Plugin
 
 A scrobbler plugin that removes albums from a watchlist playlist as you listen to them.

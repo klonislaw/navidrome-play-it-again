@@ -239,6 +239,18 @@ func rebuildForgottenRecords(username string) error {
 		return nil
 	}
 
+	genres := collectGenres()
+	if len(genres) > 0 {
+		filtered := make([]albumInfo, 0, len(albums))
+		for _, a := range albums {
+			if genreMatch(a.Genre, genres) {
+				filtered = append(filtered, a)
+			}
+		}
+		logf("fr: filtered %d albums to %d by genre", len(albums), len(filtered))
+		albums = filtered
+	}
+
 	// Sort by played timestamp ascending. Empty string (never played) sorts
 	// first since "" < any non-empty string. ISO 8601 timestamps sort
 	// lexicographically in chronological order.
@@ -396,6 +408,7 @@ type albumInfo struct {
 	ID     string `json:"id"`
 	Name   string `json:"name"`
 	Played string `json:"played"`
+	Genre  string `json:"genre"`
 }
 
 type albumSongsResp struct {
@@ -734,6 +747,31 @@ func clamp(v, min, max int) int {
 		return max
 	}
 	return v
+}
+
+// collectGenres reads the 5 genre config fields and returns the non-empty values
+// trimmed and lowercased for case-insensitive comparison.
+func collectGenres() []string {
+	var genres []string
+	for i := 1; i <= 5; i++ {
+		g := strings.TrimSpace(configStr(fmt.Sprintf("forgottenrecords_genre_%d", i), ""))
+		if g != "" {
+			genres = append(genres, strings.ToLower(g))
+		}
+	}
+	return genres
+}
+
+// genreMatch returns true if albumGenre matches any of the configured genres
+// (case-insensitive).
+func genreMatch(albumGenre string, genres []string) bool {
+	lg := strings.ToLower(albumGenre)
+	for _, g := range genres {
+		if lg == g {
+			return true
+		}
+	}
+	return false
 }
 
 // --- Logging ---
