@@ -23,3 +23,8 @@ go.work.sum
 
 # env file
 .env
+
+
+
+# macOS build artifact (not needed)
+navidrome-play-it-again

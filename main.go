@@ -28,7 +28,6 @@ const (
 
 	// Forgotten Records settings
 	defaultForgottenRecordsEnabled       = true
-	defaultForgottenRecordsPlaylistName  = "Forgotten records"
 	defaultForgottenRecordsAlbumCount    = 8
 	defaultForgottenRecordsAlbumPoolSize = 50
 	defaultForgottenRecordsThreshold     = 30
@@ -92,11 +91,14 @@ func (p *plugin) Scrobble(req scrobbler.ScrobbleRequest) error {
 			clamp(configInt("playlater_threshold", defaultPlayLaterThreshold), 1, 100), "")
 	}
 
-	// Forgotten Records: same removal logic, separate playlist and KV namespace.
+	// Forgotten Records: check removal for each configured playlist.
 	if configBool("forgottenrecords_enabled", defaultForgottenRecordsEnabled) {
-		checkPlaylistRemoval(username, trackID, albumID, req.Track.Album, totalTracks,
-			configStr("forgottenrecords_playlist_name", defaultForgottenRecordsPlaylistName),
-			clamp(configInt("forgottenrecords_threshold", defaultForgottenRecordsThreshold), 1, 100), "fr:")
+		for _, cfg := range collectPlaylistConfigs() {
+			checkPlaylistRemoval(username, trackID, albumID, req.Track.Album, totalTracks,
+				cfg.Name,
+				clamp(configInt("forgottenrecords_threshold", defaultForgottenRecordsThreshold), 1, 100),
+				fmt.Sprintf("fr%d:", cfg.Index))
+		}
 	}
 
 	return nil
@@ -223,11 +225,9 @@ func checkPlaylistRemoval(username, trackID, albumID, albumName string, totalTra
 
 // --- Forgotten Records rebuild ---
 
-// rebuildForgottenRecords fetches all albums, selects the least-recently-played
-// ones, randomly picks albumCount from a pool of albumCount×multiplier, and
-// fully rebuilds the playlist with their tracks.
+// rebuildForgottenRecords fetches all albums once, then rebuilds each configured
+// Forgotten Records playlist with its own tag filter.
 func rebuildForgottenRecords(username string) error {
-	playlistName := configStr("forgottenrecords_playlist_name", defaultForgottenRecordsPlaylistName)
 	albumCount := clamp(configInt("forgottenrecords_album_count", defaultForgottenRecordsAlbumCount), 1, 1000)
 	albumPoolSize := clamp(configInt("forgottenrecords_album_pool_size", defaultForgottenRecordsAlbumPoolSize), 1, 1000)
 
@@ -239,18 +239,6 @@ func rebuildForgottenRecords(username string) error {
 		return nil
 	}
 
-	genres := collectGenres()
-	if len(genres) > 0 {
-		filtered := make([]albumInfo, 0, len(albums))
-		for _, a := range albums {
-			if genreMatch(a.Genre, genres) {
-				filtered = append(filtered, a)
-			}
-		}
-		logf("fr: filtered %d albums to %d by genre", len(albums), len(filtered))
-		albums = filtered
-	}
-
 	// Sort by played timestamp ascending. Empty string (never played) sorts
 	// first since "" < any non-empty string. ISO 8601 timestamps sort
 	// lexicographically in chronological order.
@@ -258,8 +246,35 @@ func rebuildForgottenRecords(username string) error {
 		return albums[i].Played < albums[j].Played
 	})
 
-	// Use the album pool size directly, but ensure it's at least albumCount
-	// and not larger than the total library album size.
+	configs := collectPlaylistConfigs()
+	for _, cfg := range configs {
+		if err := rebuildOneFRPlaylist(username, cfg, albums, albumCount, albumPoolSize); err != nil {
+			logf("fr: error rebuilding playlist %q: %v", cfg.Name, err)
+		}
+	}
+	return nil
+}
+
+// rebuildOneFRPlaylist rebuilds a single Forgotten Records playlist. It filters
+// the pre-sorted albums by tags (if any), selects random albums, and replaces
+// the playlist content.
+func rebuildOneFRPlaylist(username string, cfg frPlaylistConfig, allAlbums []albumInfo, albumCount, albumPoolSize int) error {
+	albums := allAlbums
+	if len(cfg.Tags) > 0 {
+		filtered := make([]albumInfo, 0, len(albums))
+		for _, a := range albums {
+			if tagMatch(a.Genre, cfg.Tags) {
+				filtered = append(filtered, a)
+			}
+		}
+		logf("fr playlist %q: filtered %d albums to %d by tags", cfg.Name, len(albums), len(filtered))
+		albums = filtered
+	}
+	if len(albums) == 0 {
+		logf("fr playlist %q: no albums match tags, skipping", cfg.Name)
+		return nil
+	}
+
 	poolSize := albumPoolSize
 	if poolSize < albumCount {
 		poolSize = albumCount
@@ -273,11 +288,10 @@ func rebuildForgottenRecords(username string) error {
 
 	var allTrackIDs []string
 	for _, a := range selected {
-		// Clear any stale played-track state so the album starts fresh.
-		host.KVStoreDelete("fr:played:" + username + ":" + a.ID)
+		host.KVStoreDelete(fmt.Sprintf("fr%d:played:%s:%s", cfg.Index, username, a.ID))
 		ids, err := fetchAlbumTrackIDs(username, a.ID)
 		if err != nil {
-			logf("fr: error fetching tracks for album %q: %v", a.Name, err)
+			logf("fr playlist %q: error fetching tracks for album %q: %v", cfg.Name, a.Name, err)
 			continue
 		}
 		allTrackIDs = append(allTrackIDs, ids...)
@@ -287,12 +301,12 @@ func rebuildForgottenRecords(username string) error {
 		return fmt.Errorf("no tracks collected for rebuild")
 	}
 
-	if err := rebuildPlaylist(username, playlistName, allTrackIDs); err != nil {
+	if err := rebuildPlaylist(username, cfg.Name, allTrackIDs); err != nil {
 		return fmt.Errorf("rebuilding playlist: %w", err)
 	}
 
 	logf("fr: rebuilt playlist %q for user %s with %d albums (%d tracks)",
-		playlistName, username, len(selected), len(allTrackIDs))
+		cfg.Name, username, len(selected), len(allTrackIDs))
 	return nil
 }
 
@@ -749,25 +763,47 @@ func clamp(v, min, max int) int {
 	return v
 }
 
-// collectGenres reads the 5 genre config fields and returns the non-empty values
-// trimmed and lowercased for case-insensitive comparison.
-func collectGenres() []string {
-	var genres []string
-	for i := 1; i <= 5; i++ {
-		g := strings.TrimSpace(configStr(fmt.Sprintf("forgottenrecords_genre_%d", i), ""))
-		if g != "" {
-			genres = append(genres, strings.ToLower(g))
-		}
-	}
-	return genres
+// frPlaylistConfig holds the configuration for a single Forgotten Records playlist.
+type frPlaylistConfig struct {
+	Index int
+	Name  string
+	Tags  []string
 }
 
-// genreMatch returns true if albumGenre matches any of the configured genres
+// collectPlaylistConfigs reads the count and per-playlist name/tags config fields
+// and returns a slice of frPlaylistConfig for each active playlist. Empty names
+// are auto-numbered as "Forgotten records N". Tags are trimmed and lowercased.
+func collectPlaylistConfigs() []frPlaylistConfig {
+	count := clamp(configInt("forgottenrecords_count", 1), 1, 5)
+	var configs []frPlaylistConfig
+	for i := 1; i <= count; i++ {
+		name := strings.TrimSpace(configStr(
+			fmt.Sprintf("forgottenrecords_playlist_name_%d", i), ""))
+		if name == "" {
+			name = fmt.Sprintf("Forgotten records %d", i)
+		}
+		tagsRaw := strings.TrimSpace(configStr(
+			fmt.Sprintf("forgottenrecords_tags_%d", i), ""))
+		var tags []string
+		if tagsRaw != "" {
+			for _, t := range strings.Split(tagsRaw, ",") {
+				t = strings.TrimSpace(strings.ToLower(t))
+				if t != "" {
+					tags = append(tags, t)
+				}
+			}
+		}
+		configs = append(configs, frPlaylistConfig{Index: i, Name: name, Tags: tags})
+	}
+	return configs
+}
+
+// tagMatch returns true if albumGenre matches any of the configured tags
 // (case-insensitive).
-func genreMatch(albumGenre string, genres []string) bool {
+func tagMatch(albumGenre string, tags []string) bool {
 	lg := strings.ToLower(albumGenre)
-	for _, g := range genres {
-		if lg == g {
+	for _, t := range tags {
+		if lg == t {
 			return true
 		}
 	}

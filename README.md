@@ -11,7 +11,7 @@ A simple [Navidrome](https://www.navidrome.org) plugin that I made to scratch my
 It revolves around 2 playlists.
 
 - **Play Later** — Playlist to track albums you want listen to later. As you listen, the plugin tracks which tracks you've played. Once you've played enough of an album, it's automatically removed. I use it as a music to-do list of sorts. From the playlist I go to the album and play it from there.
-- **Forgotten Records** — A rotating collection of random complete albums you haven't played in a while. It is refreshed on a regular schedule and albums get removed as you play them.
+- **Forgotten Records** — Up to 5 rotating collections of random complete albums you haven't played in a while. Each playlist can be filtered by genre tags. They are refreshed on a regular schedule and albums get removed as you play them.
 
 ## AI coding alert
 
@@ -25,15 +25,15 @@ Add full albums to a playlist called **Play Later** or what other name you set u
 
 ### Forgotten Records
 
-The plugin maintains a **Forgotten Records** playlist: a rotating collection of random complete albums you haven't played in a while. The playlist is rebuilt automatically on a schedule (default: daily). On each rebuild, the plugin:
+The plugin maintains up to 5 independent **Forgotten Records** playlists: rotating collections of random complete albums you haven't played in a while. Each playlist can be filtered by genre tags. The playlists are rebuilt automatically on a shared schedule (default: daily). On each rebuild, for each configured playlist, the plugin:
 
 1. Fetches all albums and sorts them by last-played timestamp (never-played first, then least-recently-played).
-2. If genre filters are configured, only albums matching at least one of the selected genres are included.
+2. If tags are configured for this playlist, only albums matching at least one tag (case-insensitive) are included.
 3. Takes a candidate pool of `Album pool size` albums from the top of that list.
 4. Randomly selects `Albums per Rebuild` albums from the pool.
 5. Fully replaces the playlist with all tracks from the selected albums.
 
-You can filter albums by up to 5 genres in the plugin config. Leave all empty to include all genres (default behavior). Genre matching is case-insensitive.
+Each playlist can be given a custom name; if left empty, it is auto-numbered as "Forgotten records N". Leave tags empty to include all genres (default behavior).
 
 As you listen, albums are removed once you've played enough tracks (same threshold as Play Later), so fresh albums take their place on the next rebuild.
 
@@ -51,11 +51,12 @@ All options are adjustable in Navidrome → Settings → Plugins after installat
 | Play Later Playlist Name                | `Play Later`        | Name of the Play Later playlist to watch (case-insensitive)                                          |
 | Album Removal Threshold (%)             | `30`                | Percentage of distinct tracks that must be scrobbled before an album is removed from Play Later      |
 | Enable Forgotten Records                | on                  | Switch for the Forgotten Records feature. Turn off to disable scheduled and scrobble-driven rebuilds |
-| Forgotten Records Playlist Name         | `Forgotten records` | Name of the Forgotten Records playlist (auto-created)                                                |
+| Number of playlists                     | `1`                 | How many Forgotten Records playlists to maintain (1–5)                                               |
+| Playlist N Name                         | (auto-numbered)     | Name of each Forgotten Records playlist. Leave empty for "Forgotten records N"                       |
+| Playlist N Tags                         | (empty)             | Comma-separated genre tags to filter albums (e.g. rock, jazz). Leave empty for all genres.           |
 | Albums per Rebuild                      | `8`                 | Number of complete albums to include in each rebuild                                                 |
 | Album pool size                         | `50`                | Number of least-recently-played albums the rebuild randomly selects from                             |
-| Forgotten Records Removal Threshold (%) | `30`                | Percentage of tracks that must be scrobbled before removal from Forgotten Records                    |
-| Genre Filter 1–5                        | (empty)             | Filter albums by genre (case-insensitive). Leave empty to include all genres.                        |
+| Forgotten Records Removal Threshold (%) | `30`                | Percentage of tracks that must be scrobbled before removal from any Forgotten Records playlist        |
 | Rebuild Schedule (Cron)                 | `0 0 * * *`         | Cron expression for rebuild (requires Navidrome restart to change)                                   |
 
 A threshold of 30% means: for a 10-track album, playing any 3 distinct tracks removes it. Setting it to 1 removes the album after the very first track; 100 requires every track.
@@ -72,11 +73,11 @@ A threshold of 30% means: for a 10-track album, playing any 3 distinct tracks re
 
 ### Forgotten Records
 
-1. After enabling the plugin (steps 1–3 above), the Forgotten Records playlist is created automatically on the first scheduled rebuild.
+1. After enabling the plugin (steps 1–3 above), the Forgotten Records playlist(s) are created automatically on the first scheduled rebuild.
 2. The first rebuild also runs immediately when the plugin is enabled (or Navidrome is restarted), so you don't have to wait for the cron schedule.
-3. Optionally adjust the Forgotten Records config options (playlist name, album count, album pool size, threshold, cron schedule) in Navidrome → Settings → Plugins.
+3. Optionally adjust the Forgotten Records config options (number of playlists, playlist names and tags, album count, album pool size, threshold, cron schedule) in Navidrome → Settings → Plugins.
 4. Changing the **Rebuild Schedule** requires a Navidrome restart (not hot-reload) to take effect.
-5. To manually refresh the playlist at any time, disable and re-enable the plugin in Navidrome → Settings → Plugins. This triggers an immediate rebuild.
+5. To manually refresh the playlists at any time, disable and re-enable the plugin in Navidrome → Settings → Plugins. This triggers an immediate rebuild.
 
 ## Repository files
 

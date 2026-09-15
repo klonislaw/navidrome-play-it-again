@@ -11,7 +11,7 @@ permalink: play-it-again/spec
 A Navidrome plugin that maintains two playlists per user:
 
 - **Play Later** — When the user plays enough tracks from an album in this playlist, the plugin automatically removes all of that album's tracks.
-- **Forgotten Records** — Automatically populated with random complete albums that haven't been played in the longest time. Rebuilt on a configurable schedule, with the same threshold-based removal as Play Later.
+- **Forgotten Records** — Automatically populated with random complete albums that haven't been played in the longest time. Supports up to 5 independent playlists, each filterable by genre tags. Rebuilt on a configurable schedule, with the same threshold-based removal as Play Later.
 
 ---
 
@@ -42,19 +42,21 @@ Play counts accumulate **across sessions** — a track played today counts along
 
 ### Forgotten Records
 
-The plugin maintains a second playlist — **Forgotten Records** — that collects random complete albums the user hasn't played in a long time. This playlist is rebuilt automatically on a schedule (default: daily at midnight).
+The plugin maintains up to 5 independent Forgotten Records playlists — each collects random complete albums the user hasn't played in a long time, optionally filtered by genre tags. All playlists are rebuilt automatically on a shared schedule (default: daily at midnight).
 
-On each rebuild:
+On each rebuild, for each configured playlist:
 
 1. All albums in the library are fetched and sorted by last-played timestamp (never-played first, then least-recently-played).
-2. If genre filters are configured, only albums matching at least one of the selected genres are included.
+2. If tags are configured for this playlist, only albums matching at least one tag (case-insensitive) are included.
 3. A candidate pool of `forgottenrecords_album_pool_size` albums is taken from the top of the sorted list.
-4. `fr_album_count` albums are randomly selected from the pool.
+4. `forgottenrecords_album_count` albums are randomly selected from the pool.
 5. The playlist is fully replaced with all tracks from the selected albums.
 
-As the user listens to albums in the playlist, the same threshold-based removal logic from Play Later applies: once enough distinct tracks from an album have been played, the album is removed. Fresh albums take its place on the next scheduled rebuild.
+Each playlist can be given a custom name; if left empty, it is auto-numbered as "Forgotten records N".
 
-The playlist is created automatically if it doesn't exist — no manual setup needed.
+As the user listens to albums in any of the playlists, the same threshold-based removal logic from Play Later applies: once enough distinct tracks from an album have been played, the album is removed. Fresh albums take its place on the next scheduled rebuild.
+
+Playlists are created automatically if they don't exist — no manual setup needed.
 
 ---
 
@@ -75,12 +77,13 @@ Declared in the plugin manifest and editable in Navidrome's plugin UI:
 | Key                                | Type    | Default             | Description                                                                                                                                                                           |
 | ---------------------------------- | ------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `forgottenrecords_enabled`         | boolean | `true`              | Master switch for the Forgotten Records feature. When `false`, no scheduled or scrobble-driven rebuilds run and any existing recurring schedule is cancelled on init.                 |
-| `forgottenrecords_playlist_name`   | string  | `Forgotten records` | Name of the Forgotten Records playlist (auto-created if missing)                                                                                                                      |
-| `forgottenrecords_album_count`     | integer | `8`                 | Number of complete albums to include in each rebuild                                                                                                                                  |
+| `forgottenrecords_count`           | integer | `1`                 | Number of Forgotten Records playlists to maintain (1–5).                                                                                                                              |
+| `forgottenrecords_playlist_name_N` | string  | (auto-numbered)     | Name of the Nth Forgotten Records playlist (auto-created if missing). Leave empty for "Forgotten records N".                                                                          |
+| `forgottenrecords_tags_N`          | string  | (empty)             | Comma-separated genre tags to filter albums for playlist N (case-insensitive). Leave empty to include all genres.                                                                     |
+| `forgottenrecords_album_count`     | integer | `8`                 | Number of complete albums to include in each playlist rebuild                                                                                                                          |
 | `forgottenrecords_album_pool_size` | integer | `50`                | Directly sets the pool size for random selection. If smaller than `forgottenrecords_album_count`, the album count is used. If larger than the library size, the library size is used. |
-| `forgottenrecords_threshold`       | integer | `30`                | % of distinct tracks that must be scrobbled before removal from Forgotten Records                                                                                                     |
+| `forgottenrecords_threshold`       | integer | `30`                | % of distinct tracks that must be scrobbled before removal from any Forgotten Records playlist                                                                                         |
 | `forgottenrecords_schedule`        | string  | `0 0 * * *`         | Cron expression for rebuild schedule (requires Navidrome restart to change)                                                                                                           |
-| `forgottenrecords_genre_1`–`_5`   | string  | (empty)             | Filter albums by genre (case-insensitive). Up to 5 genres. Leave all empty to include all genres.                                                    |
 
 ---
 
@@ -132,8 +135,9 @@ on Scrobble(username, track):
      if not found → return
   2. checkPlaylistRemoval(username, track, albumId, totalTracks,
        playlist="Play Later", threshold=config.playlater_threshold, kvPrefix="")
-  3. checkPlaylistRemoval(username, track, albumId, totalTracks,
-       playlist="Forgotten records", threshold=config.forgottenrecords_threshold, kvPrefix="fr:")
+  3. for each FR playlist config:
+       checkPlaylistRemoval(username, track, albumId, totalTracks,
+         playlist=cfg.Name, threshold=config.forgottenrecords_threshold, kvPrefix="fr{i}:")
 
 checkPlaylistRemoval(username, track, albumId, totalTracks, playlist, threshold, kvPrefix):
   1. playlist ← findPlaylist(username, playlistName)
@@ -177,7 +181,7 @@ The cache key includes the playlist name (`playlist:{username}:{playlistName}`) 
 | ------------------------------------ | ----------------------------------------------------- | ------------------------- |
 | `playlist:{username}:{playlistName}` | Navidrome playlist ID (string, in-memory cache)       | 5 min                     |
 | `played:{username}:{albumId}`        | JSON array of scrobbled track IDs (Play Later)        | None (cleared on removal) |
-| `fr:played:{username}:{albumId}`     | JSON array of scrobbled track IDs (Forgotten Records) | None (cleared on removal) |
+| `fr{N}:played:{username}:{albumId}`  | JSON array of scrobbled track IDs (FR playlist N)     | None (cleared on removal) |
 | `state:last_username`                | Username saved by IsAuthorized                        | None                      |
 
 ### Playlist modification
@@ -211,7 +215,7 @@ Because the endpoint uses **indexes** (not IDs) for removal, the plugin must:
 
 1. After enabling the plugin (steps 1–3 above), the Forgotten Records playlist is created automatically on the first scheduled rebuild.
 2. To trigger it immediately, restart Navidrome (the schedule is registered on plugin load).
-3. Optionally adjust `forgottenrecords_enabled`, `forgottenrecords_playlist_name`, `forgottenrecords_album_count`, `forgottenrecords_album_pool_size`, `forgottenrecords_threshold`, and `forgottenrecords_schedule` in the plugin config.
+3. Optionally adjust `forgottenrecords_enabled`, `forgottenrecords_count`, per-playlist names and tags, `forgottenrecords_album_count`, `forgottenrecords_album_pool_size`, `forgottenrecords_threshold`, and `forgottenrecords_schedule` in the plugin config.
 4. Changing `forgottenrecords_schedule` requires a Navidrome restart (not hot-reload) to take effect.
 
 ---
@@ -222,6 +226,7 @@ Because the endpoint uses **indexes** (not IDs) for removal, the plugin must:
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Play Later playlist doesn't exist yet                 | Plugin does nothing; no error                                                                                                                                       |
 | Forgotten Records playlist doesn't exist              | Created automatically on first scheduled rebuild                                                                                                                    |
+| `forgottenrecords_count` > 1                          | Each playlist is rebuilt independently with its own tag filter                                                                                                       |
 | Album partially added (not all tracks in playlist)    | `totalInAlbum` comes from Navidrome's album record (full count), so threshold is based on the full album even if only some tracks are in the playlist               |
 | User replays a track                                  | Distinct-track set prevents double-counting                                                                                                                         |
 | Track removed from playlist manually before threshold | On next scrobble, the plugin re-checks; if no album tracks remain, it skips                                                                                         |
@@ -230,6 +235,7 @@ Because the endpoint uses **indexes** (not IDs) for removal, the plugin must:
 | `playlater_threshold` = 100                           | All tracks must be scrobbled                                                                                                                                        |
 | Album not in Navidrome library (edge)                 | `getAlbum` fails → plugin logs a warning and skips                                                                                                                  |
 | Library has fewer albums than pool size               | Pool shrinks to available albums; if fewer than `forgottenrecords_album_count`, all available albums are used                                                       |
+| Playlist tags empty                                   | No filtering — all albums are candidates (current default behavior)                                                                                                  |
 | Schedule registration fails                           | Plugin loads normally; Play Later still works; error logged                                                                                                         |
 | Config change to `forgottenrecords_schedule`          | Requires Navidrome restart (not hot-reload) — `OnInit` re-registers the schedule                                                                                    |
 | `playlater_enabled` = false                           | Plugin skips all Play Later processing on scrobble; existing playlist is left as-is                                                                                 |
@@ -245,23 +251,24 @@ Because the endpoint uses **indexes** (not IDs) for removal, the plugin must:
 ```
 rebuildForgottenRecords(username):
   1. Fetch all albums via getAlbumList2 (paginated, 500 per page)
-  2. If genre filters configured: filter albums to only those matching any selected genre
-  3. Sort by played timestamp ascending (never-played first)
-  4. poolSize ← fr_album_count × fr_pool_multiplier (clamped to library size)
-  5. pool ← first poolSize albums from sorted list
-  6. selected ← randomSelect(pool, fr_album_count)
-  7. For each album in selected:
-     - Delete fr:played:{username}:{albumId} (clean slate)
-     - Fetch track IDs via getAlbum
-     - Collect all track IDs
-  8. Find or create the Forgotten Records playlist
-  9. Clear the playlist (remove all entries in batches of 200)
-  10. Add all track IDs to the playlist (in batches of 200)
+  2. Sort by played timestamp ascending (never-played first)
+  3. For each configured FR playlist (i = 1..count):
+     a. If tags configured: filter albums to only those matching any tag
+     b. poolSize ← fr_album_count × fr_pool_multiplier (clamped to library size)
+     c. pool ← first poolSize albums from sorted list
+     d. selected ← randomSelect(pool, fr_album_count)
+     e. For each album in selected:
+        - Delete fr{i}:played:{username}:{albumId} (clean slate)
+        - Fetch track IDs via getAlbum
+        - Collect all track IDs
+     f. Find or create the playlist
+     g. Clear the playlist (remove all entries in batches of 200)
+     h. Add all track IDs to the playlist (in batches of 200)
 ```
 
 ### Random selection
 
-A pool of `forgottenrecords_album_pool_size` least-recently-played albums is built. If genre filters are configured, only albums matching at least one of the selected genres are included before the pool is formed. From this pool, `forgottenrecords_album_count` albums are randomly selected (without replacement) using `math/rand` seeded with the current time. This gives variety while ensuring only long-unplayed albums are candidates. If fewer albums match the genre filter than the pool size, the pool shrinks to the available matches.
+A pool of `forgottenrecords_album_pool_size` least-recently-played albums is built. If tags are configured for a playlist, only albums matching at least one tag are included before the pool is formed. From this pool, `forgottenrecords_album_count` albums are randomly selected (without replacement) using `math/rand` seeded with the current time. This gives variety while ensuring only long-unplayed albums are candidates. If fewer albums match the tag filter than the pool size, the pool shrinks to the available matches. Each playlist uses independent played-track tracking (`fr{N}:played:` prefix).
 
 ### Schedule lifecycle
 

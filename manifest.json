@@ -51,12 +51,6 @@
           "description": "When enabled, the plugin maintains the Forgotten Records playlist by scheduling rebuilds and removing albums as you scrobble them. When disabled, no scheduled or scrobble-driven rebuilds run.",
           "default": true
         },
-        "forgottenrecords_playlist_name": {
-          "type": "string",
-          "title": "Forgotten records playlist name",
-          "description": "Name of the Forgotten Records playlist (case-insensitive). Created automatically if it doesn't exist.",
-          "default": "Forgotten records"
-        },
         "forgottenrecords_album_count": {
           "type": "integer",
           "title": "Albums in the playlist",
@@ -85,30 +79,63 @@
           "description": "Cron expression for how often the Forgotten Records playlist is rebuilt. Default: daily at midnight (0 0 * * *). Requires Navidrome restart to take effect.",
           "default": "0 0 * * *"
         },
-        "forgottenrecords_genre_1": {
-          "type": "string",
-          "title": "Genre 1",
-          "description": "Filter albums by genre. Leave empty to include all genres."
+        "forgottenrecords_count": {
+          "type": "integer",
+          "title": "Number of playlists",
+          "description": "How many Forgotten Records playlists to maintain (1–5).",
+          "default": 1,
+          "minimum": 1,
+          "maximum": 5
         },
-        "forgottenrecords_genre_2": {
+        "forgottenrecords_playlist_name_1": {
           "type": "string",
-          "title": "Genre 2",
-          "description": "Filter albums by genre. Leave empty to include all genres."
+          "title": "Playlist 1 name",
+          "description": "Name of the first Forgotten Records playlist. Leave empty for auto-numbered name."
         },
-        "forgottenrecords_genre_3": {
+        "forgottenrecords_tags_1": {
           "type": "string",
-          "title": "Genre 3",
-          "description": "Filter albums by genre. Leave empty to include all genres."
+          "title": "Playlist 1 tags",
+          "description": "Comma-separated genre tags to filter albums (e.g. rock, jazz). Leave empty for all genres."
         },
-        "forgottenrecords_genre_4": {
+        "forgottenrecords_playlist_name_2": {
           "type": "string",
-          "title": "Genre 4",
-          "description": "Filter albums by genre. Leave empty to include all genres."
+          "title": "Playlist 2 name",
+          "description": "Name of the second Forgotten Records playlist. Leave empty for auto-numbered name."
         },
-        "forgottenrecords_genre_5": {
+        "forgottenrecords_tags_2": {
           "type": "string",
-          "title": "Genre 5",
-          "description": "Filter albums by genre. Leave empty to include all genres."
+          "title": "Playlist 2 tags",
+          "description": "Comma-separated genre tags to filter albums (e.g. rock, jazz). Leave empty for all genres."
+        },
+        "forgottenrecords_playlist_name_3": {
+          "type": "string",
+          "title": "Playlist 3 name",
+          "description": "Name of the third Forgotten Records playlist. Leave empty for auto-numbered name."
+        },
+        "forgottenrecords_tags_3": {
+          "type": "string",
+          "title": "Playlist 3 tags",
+          "description": "Comma-separated genre tags to filter albums (e.g. rock, jazz). Leave empty for all genres."
+        },
+        "forgottenrecords_playlist_name_4": {
+          "type": "string",
+          "title": "Playlist 4 name",
+          "description": "Name of the fourth Forgotten Records playlist. Leave empty for auto-numbered name."
+        },
+        "forgottenrecords_tags_4": {
+          "type": "string",
+          "title": "Playlist 4 tags",
+          "description": "Comma-separated genre tags to filter albums (e.g. rock, jazz). Leave empty for all genres."
+        },
+        "forgottenrecords_playlist_name_5": {
+          "type": "string",
+          "title": "Playlist 5 name",
+          "description": "Name of the fifth Forgotten Records playlist. Leave empty for auto-numbered name."
+        },
+        "forgottenrecords_tags_5": {
+          "type": "string",
+          "title": "Playlist 5 tags",
+          "description": "Comma-separated genre tags to filter albums (e.g. rock, jazz). Leave empty for all genres."
         }
       }
     },
@@ -167,10 +194,6 @@
             },
             {
               "type": "Control",
-              "scope": "#/properties/forgottenrecords_playlist_name"
-            },
-            {
-              "type": "Control",
               "scope": "#/properties/forgottenrecords_album_count"
             },
             {
@@ -190,28 +213,88 @@
               "text": "\u200B"
             },
             {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_count"
+            },
+            {
               "type": "Label",
-              "text": "Filter by genre (case-insensitive, leave empty to include all):"
+              "text": "\u200B"
+            },
+            {
+              "type": "Label",
+              "text": "Playlist 1:"
             },
             {
               "type": "Control",
-              "scope": "#/properties/forgottenrecords_genre_1"
+              "scope": "#/properties/forgottenrecords_playlist_name_1"
             },
             {
               "type": "Control",
-              "scope": "#/properties/forgottenrecords_genre_2"
+              "scope": "#/properties/forgottenrecords_tags_1"
+            },
+            {
+              "type": "Label",
+              "text": "\u200B"
+            },
+            {
+              "type": "Label",
+              "text": "Playlist 2:"
             },
             {
               "type": "Control",
-              "scope": "#/properties/forgottenrecords_genre_3"
+              "scope": "#/properties/forgottenrecords_playlist_name_2"
             },
             {
               "type": "Control",
-              "scope": "#/properties/forgottenrecords_genre_4"
+              "scope": "#/properties/forgottenrecords_tags_2"
+            },
+            {
+              "type": "Label",
+              "text": "\u200B"
+            },
+            {
+              "type": "Label",
+              "text": "Playlist 3:"
             },
             {
               "type": "Control",
-              "scope": "#/properties/forgottenrecords_genre_5"
+              "scope": "#/properties/forgottenrecords_playlist_name_3"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_tags_3"
+            },
+            {
+              "type": "Label",
+              "text": "\u200B"
+            },
+            {
+              "type": "Label",
+              "text": "Playlist 4:"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_playlist_name_4"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_tags_4"
+            },
+            {
+              "type": "Label",
+              "text": "\u200B"
+            },
+            {
+              "type": "Label",
+              "text": "Playlist 5:"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_playlist_name_5"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/forgottenrecords_tags_5"
             },
             {
               "type": "Label",
