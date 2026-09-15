@@ -13,6 +13,11 @@ It revolves around 2 playlists.
 - **Play Later** — Playlist to track albums you want listen to later. As you listen, the plugin tracks which tracks you've played. Once you've played enough of an album, it's automatically removed. I use it as a music to-do list of sorts. From the playlist I go to the album and play it from there.
 - **Forgotten Records** — Up to 5 rotating collections of random complete albums you haven't played in a while. Each playlist can be filtered by genre tags. They are refreshed on a regular schedule and albums get removed as you play them.
 
+## Changes from initial release
+
+- **Multiple Forgotten Records playlists** — maintain up to 5 independent playlists (was: 1 only)
+- **Genre tag filtering** — each Forgotten Records playlist can be filtered by genre tags
+
 ## AI coding alert
 
 For full transparency: all the code, as well as the readme from the next section onward, was written using AI. Given that Navidrom plugins use Go (which I never used before) and plugins are explicitly limited in what they are allowed to do, this was a suitable solution for me.

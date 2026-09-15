@@ -28,3 +28,6 @@ go.work.sum
 
 # macOS build artifact (not needed)
 navidrome-play-it-again
+
+# Notatki
+notes/
